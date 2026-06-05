@@ -170,19 +170,66 @@ body::before{
 
 .note{font-size:11px;color:var(--ink-soft);line-height:1.6;margin-top:18px;text-align:center;}
 .foot{font-size:10.5px;color:var(--ink-soft);text-align:center;margin-top:22px;opacity:.8;}
+
+/* ===== Tab bar ===== */
+.tabbar{display:flex;gap:4px;background:var(--indigo-deep);border-radius:14px;padding:4px;margin-bottom:18px;}
+.tab-btn{flex:1;border:none;background:transparent;color:rgba(255,255,255,.5);font-family:"Zen Maru Gothic",sans-serif;
+  font-size:13px;font-weight:700;padding:10px 4px;border-radius:10px;cursor:pointer;transition:.2s;letter-spacing:.03em;}
+.tab-btn.active{background:var(--vermilion);color:#fff;box-shadow:0 4px 12px -6px rgba(200,68,47,.8);}
+
+/* ===== Subject tags for past exam ===== */
+.tag.hourei{background:rgba(47,143,107,.15);color:#1a6b47;}
+.tag.yakkan{background:rgba(176,138,62,.15);color:#7a5e22;}
+.tag.kokunai{background:rgba(22,50,79,.12);color:var(--indigo);}
+.tag.multi{background:rgba(200,68,47,.12);color:var(--vermilion);}
+
+/* ===== Kakomon screens (same as .screen) ===== */
+.kscreen{display:none;animation:fade .35s ease both;}
+.kscreen.active{display:block;}
+
+/* ===== Multi-answer option state ===== */
+.opt.selected{border-color:var(--indigo);background:rgba(22,50,79,.07);}
+.opt.selected .mk{background:var(--indigo);color:#fff;}
+
+/* ===== Score table ===== */
+.score-tbl{width:100%;border-collapse:collapse;margin-top:8px;}
+.score-tbl th,.score-tbl td{padding:10px 12px;text-align:left;border-bottom:1px dashed var(--line);font-size:13.5px;}
+.score-tbl th{font-size:11.5px;color:var(--ink-soft);font-weight:500;}
+.score-tbl td:last-child{text-align:right;font-family:"Shippori Mincho B1",serif;font-size:16px;color:var(--indigo);}
+.score-tbl tr.total-row td{border-top:2px solid var(--line);border-bottom:none;font-weight:700;font-size:17px;}
+.score-tbl .pass{color:var(--green);}
+.score-tbl .fail{color:var(--vermilion);}
+
+/* ===== Kakomon subject selector ===== */
+.ksubj-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.ksubj-chip{border:1.5px solid var(--line);background:#fff;color:var(--ink);
+  padding:10px 16px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;transition:.18s;user-select:none;}
+.ksubj-chip[data-on="1"]{background:var(--indigo);color:#fff;border-color:var(--indigo);}
+.ksubj-chip.all-chip[data-on="1"]{background:var(--vermilion);border-color:var(--vermilion);}
+.confirm-btn{display:block;width:100%;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:"Zen Maru Gothic",sans-serif;background:var(--indigo);color:#fff;margin-top:14px;transition:.15s;}
+.confirm-btn:active{transform:scale(.98);}
 </style>
 </head>
 <body>
 <div class="app">
 
+  <!-- Tab bar -->
+  <div class="tabbar">
+    <button class="tab-btn active" id="tabKankou" onclick="switchTab('kankou')">観光資源クイズ</button>
+    <button class="tab-btn" id="tabKakomon" onclick="switchTab('kakomon')">過去問（令和7年）</button>
+  </div>
+
   <div class="brand">
-    <div class="seal serif">観</div>
+    <div class="seal serif" id="brandSeal">観</div>
     <div>
-      <h1>国内観光資源クイズ</h1>
-      <p>旅行業務取扱管理者 試験対策</p>
+      <h1 id="brandTitle">国内観光資源クイズ</h1>
+      <p id="brandSub">旅行業務取扱管理者 試験対策</p>
     </div>
   </div>
 
+  <!-- ========== KANKOU GROUP ========== -->
+  <div id="kankou-group">
   <!-- ===================== HOME ===================== -->
   <section id="home" class="screen active">
     <div class="stats">
@@ -297,8 +344,190 @@ body::before{
     <button class="btn btn-ghost" id="reviewHomeBtn">ホームへ戻る</button>
   </section>
 
+  </div><!-- /kankou-group -->
+
+  <!-- ========== KAKOMON GROUP ========== -->
+  <div id="kakomon-group" style="display:none">
+
+  <!-- ===== KAKOMON HOME ===== -->
+  <section id="kakomon-home" class="kscreen active">
+    <div class="card" style="margin-top:8px;">
+      <p class="card-title">出題科目を選ぶ</p>
+      <div class="ksubj-chips" id="ksubjChips">
+        <div class="ksubj-chip all-chip" data-s="all" data-on="1">全科目</div>
+        <div class="ksubj-chip" data-s="hourei" data-on="0">旅行業法令</div>
+        <div class="ksubj-chip" data-s="yakkan" data-on="0">約款</div>
+        <div class="ksubj-chip" data-s="kokunai" data-on="0">国内旅行実務</div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="card-title">問題情報</p>
+      <div class="row">
+        <div><div class="k">試験年度</div></div>
+        <div style="font-size:13px;font-weight:600;color:var(--indigo)">令和7年度（2025年）</div>
+      </div>
+      <div class="row">
+        <div><div class="k">問題数</div><div class="sub" id="kCountSub">88問（全科目）</div></div>
+        <div style="font-size:13px;font-weight:600;color:var(--indigo)" id="kMaxScore">満点：300点</div>
+      </div>
+      <div class="row" style="border-bottom:none;">
+        <div><div class="k">複数正解問題</div><div class="sub">すべて選んでから回答</div></div>
+        <div style="font-size:12px;color:var(--ink-soft)">あり</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="kStartBtn">過去問を始める</button>
+    <p class="foot" style="margin-top:16px;">※ 令和7年度 国内旅行業務取扱管理者試験をもとに作成</p>
+  </section>
+
+  <!-- ===== KAKOMON QUIZ ===== -->
+  <section id="kakomon-quiz" class="kscreen">
+    <div class="qbar">
+      <span class="count" id="kqCount">1 / 88</span>
+      <div class="progress"><i id="kqProgress"></i></div>
+    </div>
+    <div class="card qcard">
+      <div class="qtags" id="kqTags"></div>
+      <p class="qtext" id="kqText"></p>
+      <div class="opts" id="kqOpts"></div>
+      <div id="kConfirmWrap" style="display:none;margin-top:14px;">
+        <button class="confirm-btn" id="kConfirmBtn">回答する</button>
+      </div>
+      <div class="exp" id="kqExp"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:14px;">
+      <div style="flex:1;font-size:12px;color:var(--ink-soft);text-align:center;" id="kqScore">現在 0点</div>
+    </div>
+    <button class="btn btn-primary" id="kNextBtn" disabled>次へ</button>
+    <button class="btn btn-ghost" id="kQuitBtn">中断してホームへ</button>
+  </section>
+
+  <!-- ===== KAKOMON RESULT ===== -->
+  <section id="kakomon-result" class="kscreen">
+    <div class="result-hero">
+      <div class="score-circle" id="kScoreCircle">
+        <div class="inner">
+          <div class="pct" id="kRPct">0%</div>
+          <div class="of" id="kROf">0 / 0点</div>
+        </div>
+      </div>
+      <div class="result-msg serif" id="kRMsg">おつかれさまでした</div>
+      <div class="result-sub" id="kRSub"></div>
+    </div>
+    <div class="card">
+      <p class="card-title">科目別得点</p>
+      <table class="score-tbl">
+        <thead><tr><th>科目</th><th>満点</th><th style="text-align:right">得点</th></tr></thead>
+        <tbody id="kScoreBody"></tbody>
+      </table>
+    </div>
+    <div class="card" id="kWrongCard">
+      <p class="card-title">不正解の問題</p>
+      <div id="kWrongList"></div>
+    </div>
+    <button class="btn btn-primary" id="kAgainBtn">もう一度（同じ設定）</button>
+    <button class="btn btn-ghost" id="kHomeBtn">ホームへ戻る</button>
+  </section>
+
+  </div><!-- /kakomon-group -->
+
 </div>
 
+<script>
+/* ===== 令和7年度 過去問データ ===== */
+const KAKOMON_R7 = [
+  { id:"r7_1", subject:"hourei", qnum:"問1", q:"次の記述のうち、法第1条「目的」に定められているものをすべて選びなさい。", options:["旅行の安全の確保", "旅行業等を営む者の業務の公正な競争の確保", "旅行業等を営む者の業務を通じた地方創生と国民経済の発展", "旅行者の利便の増進"], answer:[0, 3], score:4, multi:true },
+  { id:"r7_2", subject:"hourei", qnum:"問2", q:"報酬を得て、次の行為を事業として行う場合、旅行業の登録を要するものをすべて選びなさい。", options:["観光案内所が他人の経営する貸切バスを手配する行為", "宿泊事業者が日帰り紅葉ハイキングツアーを販売する行為", "全国通訳案内士が新幹線の乗車券類を手配する行為", "宿泊事業者が自社と他社の宿泊プランをセットにして販売する行為"], answer:[0, 2, 3], score:4, multi:true },
+  { id:"r7_3", subject:"hourei", qnum:"問3", q:"旅行業及び旅行業者代理業の登録に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["第3種旅行業の新規登録は都道府県知事に提出。", "地域限定旅行業の新規登録は都道府県知事に提出。", "旅行業者代理業の新規登録は所属旅行業者の主たる営業所管轄の都道府県知事に提出。", "第1種旅行業の更新登録は有効期間満了の2月前までに観光庁長官に提出。"], answer:[2], score:4, multi:false },
+  { id:"r7_4", subject:"hourei", qnum:"問4", q:"登録業務範囲に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["第3種旅行業者は本邦外のすべての旅行業務を取り扱うことはできない。", "地域限定旅行業者は一の拠点区域内で訪日外国人向け募集型企画旅行を実施できる。", "第2種旅行業者は本邦外の受注型企画旅行を実施できる。", "地域限定旅行業者は本邦外の旅行に関する相談に応ずることができる。"], answer:[0], score:4, multi:false },
+  { id:"r7_5", subject:"hourei", qnum:"問5", q:"次の記述のうち、旅行業又は旅行業者代理業の登録の拒否事由に該当しないものを1つ選びなさい。", options:["罰金刑に処せられ、執行を終わってから3年を経過していない者", "心身の故障により旅行業等を適正に遂行できない者", "申請前5年以内に旅行業務に関し不正な行為をした者", "第3種旅行業で基準資産額が300万円であるもの"], answer:[3], score:4, multi:false },
+  { id:"r7_6", subject:"hourei", qnum:"問6", q:"変更登録等に関する次の記述のうち、正しいものを1つ選びなさい。", options:["第2種が本邦外の募集型企画旅行を実施する場合は観光庁長官に変更届出書を提出。", "地域限定が主たる営業所以外の営業所の所在地を変更したときは届出を要しない。", "第3種は代表者の氏名に変更があったときは変更登録申請書を提出。", "第1種が業務範囲を第2種に変更しようとするときは、都道府県知事に変更登録申請書を提出。"], answer:[3], score:4, multi:false },
+  { id:"r7_7", subject:"hourei", qnum:"問7", q:"営業保証金に関する次の記述のうち、正しいものを1つ選びなさい。", options:["供託物受入れの記載のある供託書の写しを添付して届け出た後でなければ事業を開始してはならない。", "30日以内に届出をしないときは7日以上の期間内に催告しなければならない。", "旅行業者代理業者は所属旅行業者の最寄りの供託所に供託しなければならない。", "毎事業年度終了後、不足額があっても追加供託を要しない。"], answer:[0], score:4, multi:false },
+  { id:"r7_8", subject:"hourei", qnum:"問8", q:"旅行業務取扱管理者の選任に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["取り扱う者が1人である営業所についても選任しなければならない。", "営業所が複数あり、距離が40km以下で取引額1億円以下の場合は1名で足りる。", "複数の者のうち1人が欠けるに至ったときは、契約を締結してはならない。", "本邦内の旅行のみを取り扱う営業所は、国内旅行業務取扱管理者を選任すればよい。"], answer:[2], score:4, multi:false },
+  { id:"r7_9", subject:"hourei", qnum:"問9", q:"次の記述のうち、旅行業務取扱管理者の職務として定められていないものをすべて選びなさい。", options:["管理者の証明書の提示に関する事項", "標識の掲示に関する事項", "旅行に関する計画の作成に関する事項", "営業保証金の供託に関する事項"], answer:[0, 1, 3], score:4, multi:true },
+  { id:"r7_10", subject:"hourei", qnum:"問10", q:"旅行者から収受する旅行業務の取扱いの料金に関する次の記述のうち、正しいものを1つ選びなさい。", options:["定額により定められ、旅行者にとって明確なものでなければならない。", "旅行業者代理業者は、自ら定めた料金を所属旅行業者に届け出なければならない。", "事業の開始後速やかに定め、営業所において掲示しなければならない。", "変更するときは、取引を行う前に営業所において掲示しなければならない。"], answer:[3], score:4, multi:false },
+  { id:"r7_11", subject:"hourei", qnum:"問11", q:"旅行業約款に関する次の記述のうち、正しいものを1つ選びなさい。", options:["標準旅行業約款と同一のものに変更しようとするときは認可を受けなければならない。", "旅行者の正当な利益を害するおそれがないものであることは、認可基準の一つである。", "損害の補償に関する事項は、記載事項として定められていない。", "所属旅行業協会の名称に変更があったときは、認可を受けなければならない。"], answer:[1], score:4, multi:false },
+  { id:"r7_12", subject:"hourei", qnum:"問12", q:"取引条件の説明及び書面交付に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["安全及び衛生に関する情報があるときは書面に記載しなければならない。", "管理者の氏名や、最終的には管理者が説明を行う旨を書面に記載しなければならない。", "相談に応ずる行為に係る契約では、変更及び解除に関する事項について説明しなければならない。", "書面の交付に代えて、情報通信の技術を利用する方法により提供することができる。"], answer:[2], score:4, multi:false },
+  { id:"r7_13", subject:"hourei", qnum:"問13", q:"企画旅行契約を締結したときに交付する書面の記載事項として定められているものをすべて選びなさい。", options:["旅行の目的地及び出発日その他の日程", "旅程管理業務を行う者の同行の有無", "契約申込の年月日", "企画旅行を実施する旅行業者の氏名・名称・住所・登録番号"], answer:[0, 3], score:4, multi:true },
+  { id:"r7_14", subject:"hourei", qnum:"問14", q:"管理者の証明書の提示、外務員の証明書携帯等に関する次の記述のうち、正しいものを1つ選びなさい。", options:["外務員の証明書を携帯させなければ、外務員としての業務に従事させてはならない。", "旅行業者代理業者の管理者の証明書は、所属旅行業者が発行しなければならない。", "管理者は契約を締結しようとするときは必ず証明書を提示しなければならない。", "管理者の証明書の提示をもって、営業所以外の場所で外務員業務に従事させることができる。"], answer:[0], score:4, multi:false },
+  { id:"r7_15", subject:"hourei", qnum:"問15", q:"企画旅行に参加する旅行者を募集するための広告に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["企画者以外の名称を表示する場合、企画者の名称の明確性を確保しなければならない。", "旅程管理業務を行う者が同行しない場合の企画者との連絡方法を表示しなければならない。", "最少催行人員を下回った場合に実施しないときは、その旨及び人員数を表示しなければならない。", "運送、宿泊又は食事のサービスの内容に関する事項を表示しなければならない。"], answer:[1], score:4, multi:false },
+  { id:"r7_16", subject:"hourei", qnum:"問16", q:"標識に関する次の記述のうち、正しいものを1つ選びなさい。", options:["社員である旅行業者は所属旅行業協会の名称・所在地を記載しなければならない。", "旅行業者代理業者は所属旅行業者の登録番号及び氏名・名称を記載しなければならない。", "旅行業者等の標識には住所を記載しなければならない。", "法人である場合、代表者の氏名を記載しなければならない。"], answer:[1], score:4, multi:false },
+  { id:"r7_17", subject:"hourei", qnum:"問17", q:"企画旅行の円滑な実施のための措置に関する次の記述のうち、正しいものを1つ選びなさい。", options:["本邦内の旅行にあっても、手続の実施等の措置を必ず講じなければならない。", "本邦内の旅行においては、集合時刻・集合場所に関する指示を行うことを要しない。", "サービスの確実な提供を確保するために旅行の開始前に必要な予約その他の措置を講じなければならない。", "本邦内の旅行で権利を表示した書面を交付すれば、当該措置を講じることを要しない。"], answer:[2], score:4, multi:false },
+  { id:"r7_18", subject:"hourei", qnum:"問18", q:"旅程管理業務を行う者に関する次の記述のうち、正しいものを1つ選びなさい。", options:["旅程管理研修修了の前後3年以内に2回以上の従事経験をいう。", "複数の場合は、すべての者が主任の者の要件を満たす者でなければならない。", "主任の者の指導による実務の研修を受けた経験は、当該地域に係る実務経験とみなされる。", "過去に不正な行為をした者は、いかなる場合も主任の者に選任することはできない。"], answer:[2], score:4, multi:false },
+  { id:"r7_19", subject:"hourei", qnum:"問19", q:"禁止行為及び名義利用等の禁止に関する次の記述のうち、誤っているものをすべて選びなさい。", options:["法令に違反する行為に関し便宜を供与したとしても、あっせんしなければ禁止行為に該当しない。", "旅行業又は代理業を他人にその名において経営させてはならない。", "取引によって生じた債務の履行をいかなる場合においても遅延する行為をしてはならない。", "事前に承諾を得たとしても営業所において掲示した料金を超えて収受してはならない。"], answer:[0, 2], score:4, multi:true },
+  { id:"r7_20", subject:"hourei", qnum:"問20", q:"受託契約に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["総合管理者を選任している地域限定は、受託契約により第1種の本邦外の企画旅行を代理販売できる。", "契約を締結できる受託旅行業者等の営業所を定めておかなければならない。", "第1種旅行業者は、地域限定旅行業者を委託旅行業者とする受託契約を締結することができる。", "旅行業者代理業者は、事前の承諾があれば、自ら他の旅行業者と受託契約を締結できる。"], answer:[3], score:4, multi:false },
+  { id:"r7_21", subject:"hourei", qnum:"問21", q:"旅行業者代理業者に関する次の記述のうち、正しいものを1つ選びなさい。", options:["所属旅行業者の承諾がある場合に限り、旅行業であるとの広告ができる。", "所属旅行業者は損害を賠償する責めに任ずるが、委託につき相当の注意等をしたときはこの限りではない。", "所属の登録が効力を失った場合でも、変更の届出を行えば登録は有効となる。", "所属旅行業者の氏名・名称を相手方に明示することを要しない。"], answer:[1], score:4, multi:false },
+  { id:"r7_22", subject:"hourei", qnum:"問22", q:"登録の取消し等に関する次の記述のうち、正しいものをすべて選びなさい。", options:["役員が所属旅行業者の役員を兼任することとなったときは業務停止を命じ、又は取り消せる。", "不正の手段により更新の登録を受けたときは業務停止を命じ、又は取り消せる。", "営業所ごとに管理者を確実に選任すると認められない者であったときは業務停止を命じ、又は取り消せる。", "財産的基礎を有しないものであったことが判明したときは業務停止を命じ、又は取り消せる。"], answer:[1, 2, 3], score:4, multi:true },
+  { id:"r7_23", subject:"hourei", qnum:"問23", q:"旅行サービス手配業に関する次の記述のうち、正しいものを1つ選びなさい。", options:["取扱管理者は、他の営業所の管理者となることができる。", "手配業務を他人に委託する場合、他の旅行サービス手配業者以外の者に委託してはならない。", "登録の有効期間は、登録の日から起算して5年である。", "法人である場合、代表者の氏名に変更があったときは30日以内に都道府県知事に届け出なければならない。"], answer:[3], score:4, multi:false },
+  { id:"r7_24", subject:"hourei", qnum:"問24", q:"旅行業協会が実施しなければならない業務として定められていないものを1つ選びなさい。", options:["旅行業務又は旅行サービス手配業務に対する苦情の解決", "旅行需要を喚起するための旅行業者等に対する諸施策の指導", "従事する者に対する研修", "取引の公正の確保又は健全な発達を図るための調査、研究及び広報"], answer:[1], score:4, multi:false },
+  { id:"r7_25", subject:"hourei", qnum:"問25", q:"旅行業協会が行う苦情の解決に関する次の記述のうち、正しいものを1つ選びなさい。", options:["必要があると認めるときは、文書でのみ説明を求めることができる。", "社員は、必要な資料の提出を求められたときは、正当な理由がないのにこれを拒んではならない。", "解決のための方法を明示しなければならない。", "苦情の解決に関する申出や結果について、社員以外の旅行業者等にも周知させなければならない。"], answer:[1], score:4, multi:false },
+  { id:"r7_26", subject:"yakkan", qnum:"問26", q:"募集型企画旅行契約の部「適用範囲」「用語の定義」に関する次の記述のうち、正しいものを1つ選びなさい。", options:["「国内旅行」とは本邦内のみ、「海外旅行」とは本邦外のみの旅行をいう。", "不利にならない範囲で書面により特約を結んだときは、その特約が約款に優先する。", "約款に定めのない事項についての法令とは、消費者契約法に限定される。", "「通信契約」とは、口座に旅行代金を振り込むことにより締結する契約をいう。"], answer:[1], score:4, multi:false },
+  { id:"r7_27", subject:"yakkan", qnum:"問27", q:"募集型企画旅行契約の部「旅行契約の内容」等に関する次の記述のうち、正しいものを1つ選びなさい。", options:["旅行日程に従って手配することのみを引き受ける。", "契約の履行に当たって、手配の全部又は一部を他の旅行業者や補助者に代行させることがある。", "特別な配慮に関する措置に要する費用は旅行業者の負担とする。", "申込金を旅行代金又は取消料の一部として取り扱い、他に充当することはできない。"], answer:[1], score:4, multi:false },
+  { id:"r7_28", subject:"yakkan", qnum:"問28", q:"電話等による予約、契約締結の拒否等に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["団体行動の円滑な実施を妨げるおそれがあるとき、締結に応じないことがある。", "業務上の都合があるとの理由で、締結に応じないことがある。", "クレジットカード会員からの予約で会員番号等の通知があったとき、締結の順位は会員番号等の通知の順位による。", "通信契約は、承諾する旨の通知が旅行者に到達した時に成立する。"], answer:[2], score:4, multi:false },
+  { id:"r7_29", subject:"yakkan", qnum:"問29", q:"契約書面の交付、確定書面に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["契約の成立後、旅行者から請求があったときに限り、旅行条件を記載した書面を交付する。", "義務を負うサービスの範囲は、契約書面に記載するところによる。", "運送・宿泊機関の名称を記載できない場合は、利用予定の機関を限定して列挙する。", "手配状況の確認を希望する問い合わせがあったときは、確定書面の交付前であっても迅速に回答する。"], answer:[0], score:4, multi:false },
+  { id:"r7_30", subject:"yakkan", qnum:"問30", q:"契約内容の変更、旅行代金の額の変更等に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["利用人員により代金が異なる旨を記載した場合、人員が変更になったときは代金を変更することがある。", "料金が通常想定される程度を大幅に超えて増額される場合は、その範囲内で代金を増加できる。", "関与し得ない事由が生じやむを得ないときは内容を変更することがあるが、緊急時は変更後に説明する。", "契約を締結した旅行者は、承諾を得て、契約上の地位を三親等以内の親族に限り譲渡できる。"], answer:[3], score:4, multi:false },
+  { id:"r7_31", subject:"yakkan", qnum:"問31", q:"旅行者が旅行開始前に契約を解除するに当たって、取消料の支払いを要するものをすべて選びなさい。", options:["台風の影響で運送機関が不通となり不可能となるおそれが極めて大きいとき。", "事故による怪我で重傷を負い入院したことから参加が不可能になったとき。", "鉄道が人身事故の影響で遅延し、出発時刻に間に合わないことが判明したとき。", "確定書面のA航空からB航空のビジネスクラスに変更されたとき。"], answer:[1, 2], score:4, multi:true },
+  { id:"r7_32", subject:"yakkan", qnum:"問32", q:"旅行開始前に契約を解除できない事由を1つ選びなさい。", options:["参加旅行者の条件を満たしていないことが判明したとき。", "病気、介助者の不在により旅行に耐えられないと認められるとき。", "日帰りの国内旅行において、旅行開始日の前日に最少催行人員を下回ったとき。", "契約内容に関し合理的な範囲を超える負担を求めたとき。"], answer:[2], score:4, multi:false },
+  { id:"r7_33", subject:"yakkan", qnum:"問33", q:"旅行開始後の解除に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["航空機の欠航により継続が不可能となったときは一部を解除することがある。", "天災地変により一部を解除したとき、契約関係は将来に向かってのみ消滅する。", "添乗員の指示に従わず一部を解除した場合、いまだ提供を受けていない部分の金額を払い戻すことを要しない。", "必要な介助者の不在により継続に耐えられないときは一部を解除することがある。"], answer:[2], score:4, multi:false },
+  { id:"r7_34", subject:"yakkan", qnum:"問34", q:"旅行代金の払戻し、契約解除後の帰路手配に関する次の記述のうち、正しいものをすべて選びなさい。", options:["通信契約で代金が増額され解除した場合、カード会員規約に従って払い戻す。", "官公署の命令により継続不可能となり一部解除したときは、出発地に戻るために必要な手配を引き受ける。", "責に帰すべき事由により不可能となり解除し全額払い戻したときは損害賠償請求できない。", "関与し得ない事由により費用が減少し減額された場合、旅行終了日の翌日から30日以内に払い戻す。"], answer:[0, 1, 3], score:4, multi:true },
+  { id:"r7_35", subject:"yakkan", qnum:"問35", q:"旅程管理、保護措置等に関する次の記述のうち、誤っているものをすべて選びなさい。", options:["保護を要する状態にあるときは必要な措置を講ずることがある。費用は旅行者負担。", "団体で行動するときは安全かつ円滑に実施するための指示に従わなければならない。", "内容を変更せざるを得ない場合、変更後の内容が当初を上回るものにしなければならない。", "参加者が30人以上のすべての旅行に添乗員その他の者を同行させなければならない。"], answer:[2, 3], score:4, multi:true },
+  { id:"r7_36", subject:"yakkan", qnum:"問36", q:"旅行業者の責任、旅行者の責任に関する次の記述のうち、正しいものを1つ選びなさい。", options:["故意又は過失により損害（手荷物を除く）を与えたときは、2年以内に通知があったときに限り賠償する。", "重大な過失により手荷物に損害を与えたときは1名1個につき15万円を限度として賠償する。", "旅行者の故意又は過失により損害を被ったときは、支払った旅行代金の額を限度として賠償しなければならない。", "異なるサービスと認識したときは、旅行地において書面を添付して申し出なければならない。"], answer:[0], score:4, multi:false },
+  { id:"r7_37", subject:"yakkan", qnum:"問37", q:"受注型企画旅行契約の部に関する次の記述のうち、正しいものを1つ選びなさい。", options:["企画料金の金額を明示した場合、申込みがなかった場合であっても企画料金を収受できる。", "通信契約の申込みをしようとする旅行者は、会員番号等を通知しなければならない。", "企画書面を交付することにより契約書面の交付に代えることができる。", "保護を要する状態にあると認め措置を講じた場合、費用は旅行業者が負担する。"], answer:[1], score:4, multi:false },
+  { id:"r7_38", subject:"yakkan", qnum:"問38", q:"受注型企画旅行契約の部に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["依頼により計画を作成し、これにより実施する旅行をいう。", "申込金の支払いを受けることなく承諾する場合、書面を交付することなく承諾した時に成立する。", "旅行日程、旅行サービスの内容などの契約内容を変更するよう求めることができる。", "承諾を得て、契約上の地位を第三者に譲渡することができる。"], answer:[1], score:4, multi:false },
+  { id:"r7_39", subject:"yakkan", qnum:"問39", q:"旅程保証に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["変更補償金の額は、旅行代金に15%以上の旅行業者が定める率を乗じた額を限度とする。", "生命又は身体の安全確保のため必要な措置を講じたことによる変更は支払わない。", "支払った後に損害賠償責任が発生することが明らかになった場合、旅行者は変更補償金を返還しなければならない。", "重要な変更が生じた場合は、変更を通知した日から起算して30日以内に支払う。"], answer:[3], score:4, multi:false },
+  { id:"r7_40", subject:"yakkan", qnum:"問40", q:"旅程保証において、変更補償金の支払いを要するものを1つ選びなさい。", options:["列車の大幅な遅延により観光施設に入場できない旨を通知したとき。", "交通事故に起因する渋滞に巻き込まれ「絵画鑑賞2時間」が1時間に変更したとき。", "生命又は身体の安全確保のために必要な措置を講じたため入場できないとき。", "確定書面の「Aホテル」が過剰予約受付のため、同等クラスの「Bホテル」に変更したとき。"], answer:[3], score:4, multi:false },
+  { id:"r7_41", subject:"yakkan", qnum:"問41", q:"特別補償、特別補償規程に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["損害賠償責任を負うとき、その限度において特別補償規程の補償金は損害賠償金とみなす。", "サービスを一切受けない日が定められ支払われない旨を明示したときは、参加中としない。", "国内旅行の参加中に発生した大地震によって20日間入院した場合、入院見舞金を支払う。", "いかなる場合においても、事故の日から180日を経過した後の通院に対しては通院見舞金を支払わない。"], answer:[2], score:4, multi:false },
+  { id:"r7_42", subject:"yakkan", qnum:"問42", q:"入院見舞金又は携帯品損害補償金の支払いの対象となるものを1つ選びなさい。", options:["親族の不注意により、落として破損したタブレット", "出発地の空港の搭乗待合室に置き忘れたデジタルカメラ", "有名ブランドの旅行カバンにキズができたが、機能に支障がないもの", "日程に含まれていないスカイダイビング体験中に発生した事故による90日間の入院"], answer:[0], score:4, multi:false },
+  { id:"r7_43", subject:"yakkan", qnum:"問43", q:"手配旅行契約の部に関する次の記述のうち、正しいものを1つ選びなさい。", options:["すべての旅行サービスについて権利を表示した書面を交付するときであっても、契約書面を交付しなければならない。", "運賃・料金の改訂等により旅行代金の変動が生じた場合、代金の増加又は減少は旅行業者に帰属する。", "提出する申込金は、旅行代金や取消料等の一部として取り扱われる。", "手配旅行契約とは、手配し、旅程を管理することを引き受ける契約をいう。"], answer:[2], score:4, multi:false },
+  { id:"r7_44", subject:"yakkan", qnum:"問44", q:"手配旅行契約の部に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["契約責任者が構成者に対して負う債務又は義務については何らの責任を負うものではない。", "支払った費用や取扱料金が既に収受した金額に満たないときであっても、差額を払い戻すことを要しない。", "責に帰すべき事由により不可能となり解除した場合、2年以内に通知があったときに限り損害を賠償する。", "宿泊サービスの手配のみを目的とする契約で書面を交付するものは口頭により申込みを受け付けることがある。"], answer:[1], score:4, multi:false },
+  { id:"r7_45", subject:"yakkan", qnum:"問45", q:"旅行相談契約の部に関する次の記述のうち、正しいものを1つ選びなさい。", options:["承諾があった場合に限り、契約書面の交付を省略することができる。", "故意又は過失により損害を与えたときは、契約成立の日から6月以内に通知があったときに限り賠償する。", "約款に定めのない事項について、法令に反せず不利にならない範囲で書面により特約を結ぶことがある。", "経費の見積りを行うことは旅行相談契約の業務に該当しない。"], answer:[2], score:4, multi:false },
+  { id:"r7_46", subject:"yakkan", qnum:"問46", q:"一般貸切旅客自動車運送事業標準運送約款に関する次の記述のうち、正しいものを1つ選びなさい。", options:["バス会社の責に帰すべき事由により運行を中止し目的地の一部にも到達しなかった場合は運賃等の全額を払い戻す。", "収受する運賃及び料金は、乗車時において届け出て実施しているものによる。", "15%以上の支払いがあったときには、所定の乗車券を発行し交付する。", "指定した期日までに旅客の名簿を必ず提出しなければならない。"], answer:[0], score:4, multi:false },
+  { id:"r7_47", subject:"yakkan", qnum:"問47", q:"一般旅客定期航路事業に関する標準運送約款に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["乗船券を紛失したときは改めて運賃を申し受ける。発見したときは通用期間経過後6ヶ月以内に限り払戻しを請求できる。", "券面記載の乗船区間、通用期間、指定便、等級及び船室に限り使用することができる。", "3辺の長さの和が2メートル以下で重量が30キログラム以下の物品は「手回り品」に該当する。", "不可抗力により乗船を延期する場合は、7日間を限度として通用期間を延長する取扱いに応じる。"], answer:[0], score:4, multi:false },
+  { id:"r7_48", subject:"yakkan", qnum:"問48", q:"旅客鉄道会社（JR）の旅客営業規則に関する次の記述のうち、正しいものを1つ選びなさい。", options:["無賃扱人員は、運賃に加え急行料金も無料となるが、寝台料金や座席指定料金には適用されない。", "学生割引を除き、2以上の割引条件に該当する場合であっても重複して割引を請求できない。", "「乗車券類」とは、乗車券、急行券、特別車両券及び座席指定券のみをいう。", "訪日観光客7人以上又はこれと同行する旅行業者によって構成された団体をいう。"], answer:[1], score:4, multi:false },
+  { id:"r7_49", subject:"yakkan", qnum:"問49", q:"モデル宿泊約款に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["法令の規定、公の秩序等に反する行為をするおそれがあると認められるときは契約を解除できる。", "通貨に代わり得る方法により支払おうとするときは、当日フロントにおいてあらかじめ呈示しなければならない。", "手荷物が宿泊に先立って到着した場合は、到着前に了解したときに限って責任をもって保管する。", "当初申込み時の宿泊日を超えて宿泊の継続を申し入れた場合、その時点で当初の宿泊契約が継続されたものとして処理する。"], answer:[3], score:4, multi:false },
+  { id:"r7_50", subject:"yakkan", qnum:"問50", q:"国内旅客運送約款（全日本空輸）に関する次の記述のうち、誤っているものを1つ選びなさい。", options:["愛玩動物について預入手荷物として引き受けるが、無料手荷物許容量の適用を受けず別に料金を支払う。", "指定する時刻までに指定場所に到着しなければならない。遅れた旅客は搭乗を拒絶されることがある。", "預入手荷物の引渡しを行う場合には、持参人が正当な受取人であるか否かを確認する義務を負う。", "12歳以上の旅客に同伴された座席を使用しない3歳未満の幼児の手荷物は、同伴する旅客の手荷物とみなす。"], answer:[2], score:4, multi:false },
+  { id:"r7_51", subject:"kokunai", qnum:"問51", q:"この行程における時間制運賃を求めるための時間のうち、正しいものはどれか。", options:["5時間分の時間制運賃が必要である。", "3時間分の時間制運賃が必要である。", "7時間分の時間制運賃が必要である。", "6時間分の時間制運賃が必要である。"], answer:[2], score:4, multi:false },
+  { id:"r7_52", subject:"kokunai", qnum:"問52", q:"この行程におけるキロ制運賃を求めるための走行距離のうち、正しいものはどれか。", options:["110キロ分のキロ制運賃が必要である。", "82キロ分のキロ制運賃が必要である。", "104キロ分のキロ制運賃が必要である。", "90キロ分のキロ制運賃が必要である。"], answer:[0], score:4, multi:false },
+  { id:"r7_53", subject:"kokunai", qnum:"問53", q:"貸切バスによる運送に関する記述のうち、誤っているものはどれか。", options:["交替運転者配置料金は、下限額以上で計算した額を適用する。", "2時間前に1台の減少を伴う変更をしたときの違約料は100,000円である。", "フェリーボートで航送する場合、時間制運賃を計算するための航送時間の上限は8時間である。", "下限額を用いて計算された運賃を所定の運賃とする場合、運賃の割引を適用することはできない。"], answer:[1], score:4, multi:false },
+  { id:"r7_54", subject:"kokunai", qnum:"問54", q:"旅客がフェリーで片道乗船する場合、支払うべき運賃の総額として正しいものを1つ選びなさい。", options:["自転車1台と申込人が2等指定席を利用：2,000円", "タクシー1台、2等指定席7席（大人4、小児2、運転手1）：19,800円", "自転車1台と申込人が2等船室を利用：1,200円", "タクシー1台、2等指定席5席（大人3、小児1、運転手1、座席なし小児1）：17,300円"], answer:[1], score:4, multi:false },
+  { id:"r7_55", subject:"kokunai", qnum:"問55", q:"宿泊に関する記述のうち、資料に基づき、正しいものを1つ選びなさい。", options:["前日に解除したとき、このホテルは13,200円の違約金を申し受ける。", "旅館は、宿泊契約が成立したとき申込金として132,000円の支払いを求めることができる。", "ツインルームに大人2人が1泊するとき、支払うべき総額は98,800円である。", "旅館に食事と寝具の提供を伴う5歳の子供1人が1泊するとき、総額は18,150円である。"], answer:[3], score:4, multi:false },
+  { id:"r7_56", subject:"kokunai", qnum:"問56", q:"行程を乗車するために必要な普通乗車券に関する記述のうち、正しいものはどれか。", options:["分割された2枚の乗車券が必要である。", "山科駅を経由する2枚の乗車券が必要である。", "156.6キロの乗車距離による乗車券1枚が必要である。", "167.6キロの乗車距離による乗車券1枚が必要である。"], answer:[2], score:4, multi:false },
+  { id:"r7_57", subject:"kokunai", qnum:"問57", q:"行程で大人1人が通常期に乗車するために必要な新幹線の特急料金の額について正しいものを選びなさい。", options:["5,020円", "5,240円", "7,310円", "7,430円"], answer:[2], score:4, multi:false },
+  { id:"r7_58", subject:"kokunai", qnum:"問58", q:"当該団体の運賃の合計額を算出する計算式のうち正しいものはどれか。", options:["297,600円", "295,120円", "304,640円", "280,860円"], answer:[3], score:4, multi:false },
+  { id:"r7_59", subject:"kokunai", qnum:"問59", q:"当該団体の料金の合計額を算出する計算式のうち正しいものはどれか。", options:["457,870円", "441,440円", "375,100円", "387,200円"], answer:[1], score:4, multi:false },
+  { id:"r7_60", subject:"kokunai", qnum:"問60", q:"JRの乗車券類の払いもどしに関する次の記述のうち、誤っているものはどれか。", options:["3時間遅延して特急料金の払いもどしを請求した。額は6,760円である。", "使用開始後の普通乗車券は不乗区間が100キロを超えている場合に限り払いもどされる。", "1枚で発行された指定券を前日に払いもどす場合の額は2,110円である。", "小児自由席特急券を有効期間開始日の2日前に払いもどす場合の額は1,860円である。"], answer:[0], score:4, multi:false },
+  { id:"r7_61", subject:"kokunai", qnum:"問61", q:"全日本空輸の国内線利用に関する次の記述のうち、正しいものはどれか。", options:["プレミアム運賃を適用する航空券は、追加料金により名義を変更することができる。", "ANA SUPER VALUE28は、全てのANA便で設定される運賃である。", "ANA FLEXを適用して大人1、小児1、幼児1が搭乗する場合、3人分の航空券を購入し3席を使用できる。", "ANA VALUE 1は、普通席に空席があるときに限り予約便を変更することができる。"], answer:[2], score:4, multi:false },
+  { id:"r7_62", subject:"kokunai", qnum:"問62", q:"ANA SUPER VALUE21を適用して搭乗する場合、誤っているものはどれか。", options:["販売期間は搭乗日の21日前までである。", "前日に座席予約を解約する場合、払戻手数料と60%相当の取消手数料が必要。", "往復ディスカウントの条件を満たせば、片道あたり5%相当額がディスカウントされる。", "搭乗日の22日前に座席を予約した場合、航空券購入期限は搭乗日の20日前である。"], answer:[3], score:4, multi:false },
+  { id:"r7_63", subject:"kokunai", qnum:"問63", q:"長い石段の参道と海の神様を祀ったことで知られ、建造物が国指定の重要文化財に指定された神社。", options:["鵜戸神宮", "赤間神宮", "金刀比羅宮", "住吉大社"], answer:[2], score:2, multi:false },
+  { id:"r7_64", subject:"kokunai", qnum:"問64", q:"急流とうず潮で知られる針尾瀬戸に架かる橋梁で、国指定の重要文化財に指定されている橋。", options:["西海橋", "九重「夢」大吊橋", "瀬戸大橋", "関門橋"], answer:[0], score:2, multi:false },
+  { id:"r7_65", subject:"kokunai", qnum:"問65", q:"木曽川沿いの城で、別名「白帝城」とも呼ばれる国宝の天守を持つ城。", options:["犬山城", "丸岡城", "松本城", "清州城"], answer:[0], score:2, multi:false },
+  { id:"r7_66", subject:"kokunai", qnum:"問66", q:"北海道西部に突出し、北西端には断崖と奇岩で知られる神威岬がある半島。", options:["知床半島", "根室半島", "渡島半島", "積丹半島"], answer:[3], score:2, multi:false },
+  { id:"r7_67", subject:"kokunai", qnum:"問67", q:"十和田湖から発し、銚子大滝など十数か所の滝と奇岩によってつくられる人気の高い観光地。", options:["猊鼻渓", "奥入瀬渓流", "九頭竜峡", "龍王峡"], answer:[1], score:2, multi:false },
+  { id:"r7_68", subject:"kokunai", qnum:"問68", q:"片品川の中流に位置し、「東洋のナイアガラ」とも称される滝。", options:["吹割の滝", "布引の滝", "浄蓮の滝", "霧降滝"], answer:[0], score:2, multi:false },
+  { id:"r7_69", subject:"kokunai", qnum:"問69", q:"西ノ島、中ノ島、知夫里島、島後の4つの島などで形成され、海岸美や史跡で知られる島。", options:["防予諸島", "対馬", "隠岐諸島", "大三島"], answer:[2], score:2, multi:false },
+  { id:"r7_70", subject:"kokunai", qnum:"問70①", q:"文章中の空欄（A）に入る観光地（岩畳周辺の紅葉）。", options:["瀞峡", "塔のへつり", "長瀞", "吾妻峡"], answer:[2], score:2, multi:false },
+  { id:"r7_71", subject:"kokunai", qnum:"問70②", q:"文章中の空欄（B）に入る観光地（白山信仰の寺、松尾芭蕉の奥の細道）。", options:["那谷寺", "明通寺", "永平寺", "大善寺"], answer:[0], score:2, multi:false },
+  { id:"r7_72", subject:"kokunai", qnum:"問70③", q:"下線（a）保津峡と同じ都道府県（京都府）の名産品。", options:["松前漬", "山川漬", "いぶりがっこ", "千枚漬"], answer:[3], score:2, multi:false },
+  { id:"r7_73", subject:"kokunai", qnum:"問70④", q:"文章中の空欄（C）に入る観光地（札幌の奥座敷と呼ばれる温泉街）。", options:["神居古潭", "定山渓", "天人峡", "五色渓谷"], answer:[1], score:2, multi:false },
+  { id:"r7_74", subject:"kokunai", qnum:"問71", q:"世界文化遺産「佐渡島の金山」に関する記述のうち、誤っているものを1つ選びなさい。", options:["「北沢浮遊選鉱場」は構成資産の1つである。", "新潟県に所在する。", "「西三川砂金山」は今昔物語集に登場する。", "世界文化遺産に登録されたのは2024年である。"], answer:[0], score:2, multi:false },
+  { id:"r7_75", subject:"kokunai", qnum:"問72", q:"世界文化遺産「琉球王国のグスク及び関連遺産群」に含まれる構成資産をすべて選びなさい。", options:["宮良殿内", "今帰仁城跡", "中城城跡", "玉陵"], answer:[1, 2, 3], score:2, multi:true },
+  { id:"r7_76", subject:"kokunai", qnum:"問73", q:"ラムサール条約の登録地「宮島」に関する記述のうち、誤っているものを1つ選びなさい。", options:["汀線に工作物が存在しないまま残る貴重な自然海岸である。", "ミヤジマトンボは捕獲等が規制されている。", "湧出水と海水が混ざる潮汐湿地が形成されている。", "「日本の夕陽百選」にも選ばれている。"], answer:[3], score:2, multi:false },
+  { id:"r7_77", subject:"kokunai", qnum:"問74", q:"十和田八幡平国立公園内にある観光地として誤っているものを1つ選びなさい。", options:["田沢湖", "八甲田山", "酸ヶ湯温泉", "岩手山"], answer:[0], score:2, multi:false },
+  { id:"r7_78", subject:"kokunai", qnum:"問75", q:"「菊池渓谷」や「内牧温泉」などの観光地がある国立公園を1つ選びなさい。", options:["霧島錦江湾国立公園", "大山隠岐国立公園", "阿蘇くじゅう国立公園", "雲仙天草国立公園"], answer:[2], score:2, multi:false },
+  { id:"r7_79", subject:"kokunai", qnum:"問76", q:"モデルコース完成：米原駅 〜（　）〜 百済寺 〜 近江八幡 〜 大津駅", options:["伊賀上野城", "丸亀城", "彦根城", "岡崎城"], answer:[2], score:2, multi:false },
+  { id:"r7_80", subject:"kokunai", qnum:"問77", q:"モデルコース完成：網走湖畔温泉 〜 オホーツク流氷館 〜（　）〜 ブユニ岬 〜 ウトロ温泉", options:["日勝峠", "オシンコシンの滝", "銀河・流星の滝", "中山峠"], answer:[1], score:2, multi:false },
+  { id:"r7_81", subject:"kokunai", qnum:"問78", q:"モデルコース完成：静岡駅 〜（　）〜 久能山東照宮 〜 三島スカイウォーク 〜 熱海温泉", options:["三保松原", "風の松原", "気比の松原", "虹の松原"], answer:[0], score:2, multi:false },
+  { id:"r7_82", subject:"kokunai", qnum:"問79", q:"モデルコース完成：那覇空港 〜（　）〜 座喜味城跡 〜 万座毛 〜 本部半島", options:["仙巌園", "天赦園", "萬福寺庭園", "識名園"], answer:[3], score:2, multi:false },
+  { id:"r7_83", subject:"kokunai", qnum:"問80", q:"モデルコース完成：長野駅 〜 善光寺 〜 飯綱高原 〜（　）〜 妙高高原駅", options:["諏訪大社", "穂高神社", "彌彦神社", "戸隠神社"], answer:[3], score:2, multi:false },
+  { id:"r7_84", subject:"kokunai", qnum:"問81", q:"モデルコース完成：水戸駅 〜（　）〜 花貫渓谷 〜 袋田の滝 〜 水戸駅", options:["旧致道館", "旧日新館", "弘道館", "足利学校"], answer:[2], score:2, multi:false },
+  { id:"r7_85", subject:"kokunai", qnum:"問82", q:"祭り・行事と温泉の組合せのうち、開催場所と所在地が同じ都道府県でないもの。", options:["鷺舞 - 三朝温泉", "唐津くんち - 武雄温泉", "お水送り - あわら温泉", "花笠まつり - 銀山温泉"], answer:[0], score:2, multi:false },
+  { id:"r7_86", subject:"kokunai", qnum:"問83", q:"観光地とテーマパークの組合せのうち、所在地が同じ都道府県でないもの。", options:["潮岬 - アドベンチャーワールド", "九十九里浜 - 鴨川シーワールド", "赤目四十八滝 - ジブリパーク", "天王寺公園 - ユニバーサル・スタジオ・ジャパン"], answer:[2], score:2, multi:false },
+  { id:"r7_87", subject:"kokunai", qnum:"問84", q:"温泉と観光地の組合せのうち、所在地がすべて同じ都道府県にあるもの。", options:["勝浦温泉 - 三段壁 - 因島", "指宿温泉 - 与論島 - 霧島神宮", "下呂温泉 - 日本平 - 熱田神宮", "玉造温泉 - 玄武洞 - 松江城"], answer:[1], score:2, multi:false },
+  { id:"r7_88", subject:"kokunai", qnum:"問85", q:"温泉と観光地の組合せのうち、所在地がすべて同じ都道府県にあるもの。", options:["豊富温泉 - 大間崎 - トラピスチヌ修道院", "有馬温泉 - 淡路島 - 竹田城跡", "四万温泉 - 榛名湖 - 旧開智学校", "別所温泉 - 清里高原 - 寝覚の床"], answer:[1], score:2, multi:false }
+];
+
+const SUBJ_LABEL = { hourei:"旅行業法令", yakkan:"約款", kokunai:"国内旅行実務" };
+const SUBJ_MAX   = { hourei:100, yakkan:100, kokunai:100 };
+</script>
 <script>
 // 国内観光資源 クイズ問題集
 // type: "4" = 4択, "OX" = ○×
@@ -947,6 +1176,287 @@ $("#startBtn").addEventListener("click",()=>startQuiz(null));
   await loadAll();
   renderHome();
 })();
+</script>
+
+<!-- ===== KAKOMON LOGIC ===== -->
+<script>
+/* ---------- tab switching ---------- */
+function switchTab(tab) {
+  const kankou = document.getElementById("kankou-group");
+  const kakomon = document.getElementById("kakomon-group");
+  const btnK = document.getElementById("tabKankou");
+  const btnP = document.getElementById("tabKakomon");
+  const brandMain = document.getElementById("brandTitle");
+  const brandSub  = document.getElementById("brandSub");
+  if (tab === "kakomon") {
+    kankou.style.display  = "none";
+    kakomon.style.display = "block";
+    btnK.classList.remove("active");
+    btnP.classList.add("active");
+    if (brandMain) brandMain.textContent = "令和7年度　過去問";
+    if (brandSub)  brandSub.textContent  = "国内旅行業務取扱管理者試験";
+  } else {
+    kakomon.style.display = "none";
+    kankou.style.display  = "block";
+    btnP.classList.remove("active");
+    btnK.classList.add("active");
+    if (brandMain) brandMain.textContent = "国内観光資源クイズ";
+    if (brandSub)  brandSub.textContent  = "旅行業務取扱管理者試験 試験対策";
+  }
+}
+
+/* ---------- subject chip selection ---------- */
+const kchips = document.querySelectorAll("#ksubjChips .ksubj-chip");
+let kSelectedSubjects = ["all"];
+
+kchips.forEach(chip => {
+  chip.addEventListener("click", () => {
+    const s = chip.dataset.s;
+    if (s === "all") {
+      kSelectedSubjects = ["all"];
+      kchips.forEach(c => c.dataset.on = (c.dataset.s === "all") ? "1" : "0");
+    } else {
+      kchips[0].dataset.on = "0"; // deselect "all"
+      if (chip.dataset.on === "1") {
+        chip.dataset.on = "0";
+      } else {
+        chip.dataset.on = "1";
+      }
+      const on = [...kchips].filter(c => c.dataset.s !== "all" && c.dataset.on === "1").map(c => c.dataset.s);
+      if (on.length === 0) {
+        kSelectedSubjects = ["all"];
+        kchips.forEach(c => c.dataset.on = (c.dataset.s === "all") ? "1" : "0");
+      } else {
+        kSelectedSubjects = on;
+      }
+    }
+    updateKHomeInfo();
+  });
+});
+
+function updateKHomeInfo() {
+  let pool, maxScore;
+  if (kSelectedSubjects.includes("all")) {
+    pool = KAKOMON_R7;
+    maxScore = 300;
+  } else {
+    pool = KAKOMON_R7.filter(q => kSelectedSubjects.includes(q.subject));
+    maxScore = kSelectedSubjects.reduce((acc, s) => acc + (SUBJ_MAX[s] || 0), 0);
+  }
+  document.getElementById("kCountSub").textContent =
+    pool.length + "問（" + (kSelectedSubjects.includes("all") ? "全科目" : kSelectedSubjects.map(s => SUBJ_LABEL[s]).join("・")) + "）";
+  document.getElementById("kMaxScore").textContent = "満点：" + maxScore + "点";
+}
+
+/* ---------- kakomon session ---------- */
+let ks = null; // kakomon session
+
+function showKScreen(id) {
+  document.querySelectorAll(".kscreen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+document.getElementById("kStartBtn").addEventListener("click", () => {
+  let pool;
+  if (kSelectedSubjects.includes("all")) {
+    pool = KAKOMON_R7.slice();
+  } else {
+    pool = KAKOMON_R7.filter(q => kSelectedSubjects.includes(q.subject));
+  }
+  ks = {
+    pool: pool,
+    idx: 0,
+    scores: { hourei: 0, yakkan: 0, kokunai: 0 },
+    totalScore: 0,
+    maxScore: kSelectedSubjects.includes("all") ? 300 : kSelectedSubjects.reduce((a, s) => a + (SUBJ_MAX[s] || 0), 0),
+    wrongItems: [],
+    selectedIdx: []
+  };
+  renderKQuestion();
+  showKScreen("kakomon-quiz");
+});
+
+function renderKQuestion() {
+  const q = ks.pool[ks.idx];
+  const total = ks.pool.length;
+  const num = ks.idx + 1;
+
+  document.getElementById("kqCount").textContent = num + " / " + total;
+  document.getElementById("kqProgress").style.width = (num / total * 100) + "%";
+
+  // tags
+  const tagsEl = document.getElementById("kqTags");
+  const multiTag = q.multi ? `<span class="tag multi">複数選択</span>` : "";
+  tagsEl.innerHTML = `<span class="tag ${q.subject}">${SUBJ_LABEL[q.subject]}</span><span class="tag" style="background:rgba(0,0,0,.06);color:var(--ink-soft)">${q.qnum}</span><span class="tag" style="background:rgba(0,0,0,.06);color:var(--ink-soft)">${q.score}点</span>${multiTag}`;
+
+  document.getElementById("kqText").textContent = q.q;
+  document.getElementById("kqExp").style.display = "none";
+  document.getElementById("kqExp").innerHTML = "";
+  document.getElementById("kNextBtn").disabled = true;
+
+  const kConfirmWrap = document.getElementById("kConfirmWrap");
+  const kConfirmBtn  = document.getElementById("kConfirmBtn");
+  kConfirmWrap.style.display = q.multi ? "block" : "none";
+  kConfirmBtn.disabled = true;
+
+  ks.selectedIdx = [];
+
+  const marks = ["ア", "イ", "ウ", "エ"];
+  const optsEl = document.getElementById("kqOpts");
+  optsEl.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt";
+    btn.innerHTML = `<span class="mk">${marks[i]}</span><span class="ot">${opt}</span>`;
+    btn.addEventListener("click", () => handleKOptClick(i, btn));
+    optsEl.appendChild(btn);
+  });
+
+  document.getElementById("kqScore").textContent = "現在 " + ks.totalScore + "点";
+}
+
+function handleKOptClick(i, btn) {
+  const q = ks.pool[ks.idx];
+  const allOpts = document.querySelectorAll("#kqOpts .opt");
+
+  if (!q.multi) {
+    // single answer: auto-submit
+    allOpts.forEach(o => o.disabled = true);
+    judgeKAnswer([i]);
+  } else {
+    // multi: toggle selection
+    if (ks.selectedIdx.includes(i)) {
+      ks.selectedIdx = ks.selectedIdx.filter(x => x !== i);
+      btn.classList.remove("selected");
+    } else {
+      ks.selectedIdx.push(i);
+      btn.classList.add("selected");
+    }
+    const kConfirmBtn = document.getElementById("kConfirmBtn");
+    kConfirmBtn.disabled = ks.selectedIdx.length === 0;
+  }
+}
+
+document.getElementById("kConfirmBtn").addEventListener("click", () => {
+  const allOpts = document.querySelectorAll("#kqOpts .opt");
+  allOpts.forEach(o => o.disabled = true);
+  document.getElementById("kConfirmBtn").disabled = true;
+  judgeKAnswer(ks.selectedIdx.slice());
+});
+
+function judgeKAnswer(chosen) {
+  const q = ks.pool[ks.idx];
+  const correct = q.answer.slice().sort().join(",") === chosen.slice().sort().join(",");
+  const allOpts = document.querySelectorAll("#kqOpts .opt");
+  const marks   = ["ア", "イ", "ウ", "エ"];
+
+  allOpts.forEach((opt, i) => {
+    const isCorrect = q.answer.includes(i);
+    const isChosen  = chosen.includes(i);
+    if (isCorrect) opt.classList.add("ok");
+    if (isChosen && !isCorrect) opt.classList.add("ng");
+  });
+
+  const expEl = document.getElementById("kqExp");
+  if (correct) {
+    expEl.innerHTML = `<span style="color:var(--green);font-weight:700;">正解！ +${q.score}点</span><br>正解：${q.answer.map(a => marks[a]).join("・")}`;
+    ks.totalScore += q.score;
+    ks.scores[q.subject] += q.score;
+  } else {
+    const yourStr = chosen.length ? chosen.map(a => marks[a]).join("・") : "（未選択）";
+    expEl.innerHTML = `<span style="color:var(--vermilion);font-weight:700;">不正解</span>　正解：${q.answer.map(a => marks[a]).join("・")}／あなた：${yourStr}`;
+    ks.wrongItems.push({ q: q.qnum + " " + q.q, ans: q.answer.map(a => marks[a]).join("・") + "（" + q.options[q.answer[0]] + (q.answer.length > 1 ? "…" : "") + "）" });
+  }
+  expEl.style.display = "block";
+  document.getElementById("kqScore").textContent = "現在 " + ks.totalScore + "点";
+  document.getElementById("kNextBtn").disabled = false;
+}
+
+document.getElementById("kNextBtn").addEventListener("click", () => {
+  ks.idx++;
+  if (ks.idx >= ks.pool.length) {
+    finishKakomon();
+  } else {
+    renderKQuestion();
+  }
+});
+
+document.getElementById("kQuitBtn").addEventListener("click", () => {
+  if (confirm("中断してホームに戻りますか？")) {
+    showKScreen("kakomon-home");
+  }
+});
+
+/* ---------- result ---------- */
+function finishKakomon() {
+  const totalPct = Math.round(ks.totalScore / ks.maxScore * 100);
+
+  document.getElementById("kRPct").textContent = totalPct + "%";
+  document.getElementById("kROf").textContent  = ks.totalScore + " / " + ks.maxScore + "点";
+
+  const circle = document.getElementById("kScoreCircle");
+  circle.classList.remove("s-good","s-ok","s-ng");
+  if (totalPct >= 80) circle.classList.add("s-good");
+  else if (totalPct >= 60) circle.classList.add("s-ok");
+  else circle.classList.add("s-ng");
+
+  let msg, sub;
+  if (totalPct >= 90) { msg = "パーフェクト！"; sub = "素晴らしい結果です。"; }
+  else if (totalPct >= 80) { msg = "合格ライン突破"; sub = "あと少しで満点。間違いを復習しましょう。"; }
+  else if (totalPct >= 60) { msg = "もう一歩"; sub = "苦手分野を重点的に復習しましょう。"; }
+  else { msg = "復習しよう"; sub = "解説をしっかり確認してもう一度挑戦を！"; }
+  document.getElementById("kRMsg").textContent = msg;
+  document.getElementById("kRSub").textContent = sub;
+
+  // score table
+  const tbody = document.getElementById("kScoreBody");
+  tbody.innerHTML = "";
+  const subjects = kSelectedSubjects.includes("all") ? ["hourei","yakkan","kokunai"] : kSelectedSubjects;
+  subjects.forEach(s => {
+    const tr = document.createElement("tr");
+    const scored = ks.scores[s];
+    const max    = SUBJ_MAX[s];
+    const pct    = Math.round(scored / max * 100);
+    const pass   = pct >= 60;
+    tr.innerHTML = `<td>${SUBJ_LABEL[s]}</td><td style="color:var(--ink-soft)">${max}点</td>` +
+      `<td style="text-align:right;color:${pass ? "var(--green)" : "var(--vermilion)"}">` +
+      `${scored}点 <span style="font-size:11px;opacity:.7">(${pct}%)</span></td>`;
+    tbody.appendChild(tr);
+  });
+  // total row
+  const trTotal = document.createElement("tr");
+  trTotal.className = "total-row";
+  trTotal.innerHTML = `<td>合計</td><td style="color:var(--ink-soft)">${ks.maxScore}点</td>` +
+    `<td style="text-align:right;color:${totalPct>=60?"var(--green)":"var(--vermilion)"}">` +
+    `${ks.totalScore}点 <span style="font-size:11px;opacity:.7">(${totalPct}%)</span></td>`;
+  tbody.appendChild(trTotal);
+
+  // wrong list
+  const wrongList = document.getElementById("kWrongList");
+  wrongList.innerHTML = "";
+  if (ks.wrongItems.length === 0) {
+    wrongList.innerHTML = `<div class="empty">全問正解！間違いはありません 🎉</div>`;
+  } else {
+    ks.wrongItems.forEach(w => {
+      const div = document.createElement("div");
+      div.className = "review-item";
+      div.innerHTML = `<div class="review-q">${w.q}</div><div class="review-a"><span class="ok">正解：${w.ans}</span></div>`;
+      wrongList.appendChild(div);
+    });
+  }
+
+  showKScreen("kakomon-result");
+}
+
+document.getElementById("kAgainBtn").addEventListener("click", () => {
+  // restart with same subject selection
+  document.getElementById("kStartBtn").click();
+});
+
+document.getElementById("kHomeBtn").addEventListener("click", () => {
+  ks = null;
+  showKScreen("kakomon-home");
+});
 </script>
 </body>
 </html>
