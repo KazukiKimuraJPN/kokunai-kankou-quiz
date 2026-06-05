@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="観光資源クイズ">
+<meta name="theme-color" content="#16324f">
+<title>国内観光資源クイズ｜旅行業務取扱管理者</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Maru+Gothic:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --indigo:#16324f;        /* 藍 */
+  --indigo-deep:#0f2438;
+  --vermilion:#c8442f;     /* 朱 */
+  --vermilion-soft:#d96a55;
+  --gold:#b08a3e;          /* 金茶 */
+  --washi:#f5efe2;         /* 和紙 */
+  --washi-2:#efe7d4;
+  --ink:#22303b;
+  --ink-soft:#52606b;
+  --green:#2f8f6b;
+  --line:rgba(22,50,79,.12);
+  --card:#fffdf7;
+  --shadow:0 10px 30px -12px rgba(15,36,56,.35);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:"Noto Sans JP",sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(200,68,47,.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(22,50,79,.07), transparent 55%),
+    var(--washi);
+  background-attachment:fixed;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+/* asanoha-ish subtle texture */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-index:0;
+  background-image:
+    repeating-linear-gradient(60deg, var(--indigo) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(-60deg, var(--indigo) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(0deg, var(--indigo) 0 1px, transparent 1px 22px);
+}
+.app{position:relative;z-index:1;max-width:520px;margin:0 auto;
+  padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 28px);min-height:100vh;}
+.serif{font-family:"Shippori Mincho B1",serif;}
+.maru{font-family:"Zen Maru Gothic",sans-serif;}
+
+/* ===== Header ===== */
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:4px;}
+.seal{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:var(--vermilion);
+  color:#fff;display:grid;place-items:center;font-family:"Shippori Mincho B1",serif;font-weight:800;
+  font-size:20px;line-height:1;box-shadow:0 6px 16px -6px rgba(200,68,47,.7);transform:rotate(-3deg);}
+.brand h1{font-family:"Shippori Mincho B1",serif;font-size:20px;margin:0;letter-spacing:.02em;color:var(--indigo);}
+.brand p{margin:2px 0 0;font-size:11.5px;color:var(--ink-soft);letter-spacing:.04em;}
+
+/* ===== Screen system ===== */
+.screen{display:none;animation:fade .35s ease both;}
+.screen.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+/* ===== Cards ===== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;
+  box-shadow:var(--shadow);padding:18px;margin-top:16px;}
+.card-title{font-family:"Shippori Mincho B1",serif;font-size:15px;color:var(--indigo);
+  margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+.card-title::before{content:"";width:6px;height:18px;background:var(--vermilion);border-radius:2px;display:inline-block;}
+
+/* ===== Stat strip ===== */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center;box-shadow:var(--shadow);}
+.stat .num{font-family:"Shippori Mincho B1",serif;font-size:22px;color:var(--indigo);line-height:1;}
+.stat .lbl{font-size:10.5px;color:var(--ink-soft);margin-top:5px;letter-spacing:.03em;}
+
+/* ===== Region chips ===== */
+.chips{display:flex;flex-wrap:wrap;gap:9px;}
+.chip{border:1.5px solid var(--line);background:#fff;color:var(--ink);
+  padding:9px 14px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;transition:.18s;user-select:none;}
+.chip[data-on="1"]{background:var(--indigo);color:#fff;border-color:var(--indigo);box-shadow:0 6px 14px -8px rgba(22,50,79,.8);}
+.chip.all[data-on="1"]{background:var(--vermilion);border-color:var(--vermilion);}
+
+/* ===== Toggles / count ===== */
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line);}
+.row:last-child{border-bottom:none;}
+.row .k{font-size:13.5px;font-weight:500;}
+.row .sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.switch{position:relative;width:50px;height:28px;flex:0 0 auto;}
+.switch input{display:none;}
+.switch span{position:absolute;inset:0;background:#d8cfba;border-radius:999px;transition:.2s;}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 2px 5px rgba(0,0,0,.25);}
+.switch input:checked + span{background:var(--green);}
+.switch input:checked + span::after{transform:translateX(22px);}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:11px;overflow:hidden;}
+.seg button{flex:1;border:none;background:#fff;padding:9px 0;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;font-family:inherit;}
+.seg button[data-on="1"]{background:var(--indigo);color:#fff;}
+
+/* ===== Buttons ===== */
+.btn{display:block;width:100%;border:none;border-radius:15px;padding:16px;font-size:16px;font-weight:700;
+  cursor:pointer;font-family:"Zen Maru Gothic",sans-serif;letter-spacing:.04em;transition:transform .1s,box-shadow .2s;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:linear-gradient(135deg,var(--vermilion),#a8331f);color:#fff;box-shadow:0 12px 26px -12px rgba(200,68,47,.85);margin-top:18px;}
+.btn-ghost{background:#fff;border:1.5px solid var(--indigo);color:var(--indigo);margin-top:11px;box-shadow:var(--shadow);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+/* ===== Quiz ===== */
+.qbar{display:flex;align-items:center;gap:12px;margin-top:8px;}
+.qbar .count{font-family:"Shippori Mincho B1",serif;font-size:14px;color:var(--indigo);white-space:nowrap;}
+.progress{flex:1;height:8px;background:var(--washi-2);border-radius:999px;overflow:hidden;border:1px solid var(--line);}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--indigo),var(--vermilion));width:0;transition:width .35s;}
+.timer-wrap{margin-top:14px;height:6px;background:var(--washi-2);border-radius:999px;overflow:hidden;display:none;}
+.timer-wrap.show{display:block;}
+.timer-wrap i{display:block;height:100%;background:var(--gold);width:100%;}
+.timer-wrap i.warn{background:var(--vermilion);}
+
+.qcard{margin-top:16px;}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:999px;letter-spacing:.05em;}
+.tag.t4{background:rgba(22,50,79,.1);color:var(--indigo);}
+.tag.tOX{background:rgba(176,138,62,.16);color:#7a5e22;}
+.tag.region{background:rgba(200,68,47,.1);color:var(--vermilion);}
+.qtags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.qtext{font-family:"Shippori Mincho B1",serif;font-size:19px;line-height:1.6;color:var(--ink);margin:0 0 4px;}
+
+.opts{margin-top:18px;display:flex;flex-direction:column;gap:11px;}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);
+  border-radius:14px;padding:15px 15px;font-size:15px;font-weight:500;color:var(--ink);cursor:pointer;
+  font-family:inherit;transition:.15s;box-shadow:0 4px 12px -10px rgba(15,36,56,.5);}
+.opt .mk{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--washi-2);color:var(--ink-soft);
+  display:grid;place-items:center;font-weight:700;font-size:13px;font-family:"Shippori Mincho B1",serif;}
+.opt:active{transform:scale(.99);}
+.opt.correct{border-color:var(--green);background:rgba(47,143,107,.1);}
+.opt.correct .mk{background:var(--green);color:#fff;}
+.opt.wrong{border-color:var(--vermilion);background:rgba(200,68,47,.1);}
+.opt.wrong .mk{background:var(--vermilion);color:#fff;}
+.opt.dim{opacity:.5;}
+.opt[disabled]{cursor:default;}
+
+.exp{margin-top:16px;background:var(--indigo);color:#fff;border-radius:14px;padding:15px;font-size:13.5px;line-height:1.7;
+  display:none;animation:fade .3s both;}
+.exp.show{display:block;}
+.exp .head{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.exp .head .res{padding:2px 10px;border-radius:999px;font-size:11px;}
+.exp .res.ok{background:var(--green);}
+.exp .res.ng{background:var(--vermilion);}
+
+/* ===== Result ===== */
+.result-hero{text-align:center;padding:26px 14px 6px;}
+.score-circle{width:160px;height:160px;margin:0 auto;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(var(--vermilion) var(--deg,0deg), var(--washi-2) 0);position:relative;}
+.score-circle::before{content:"";position:absolute;inset:14px;background:var(--card);border-radius:50%;box-shadow:inset 0 2px 8px rgba(0,0,0,.08);}
+.score-circle .inner{position:relative;text-align:center;}
+.score-circle .pct{font-family:"Shippori Mincho B1",serif;font-size:42px;color:var(--indigo);line-height:1;}
+.score-circle .of{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+.result-msg{font-family:"Shippori Mincho B1",serif;font-size:20px;color:var(--vermilion);margin:18px 0 2px;}
+.result-sub{font-size:13px;color:var(--ink-soft);}
+
+.review-item{border-bottom:1px dashed var(--line);padding:13px 0;}
+.review-item:last-child{border-bottom:none;}
+.review-q{font-size:14px;font-weight:500;line-height:1.55;}
+.review-a{font-size:12.5px;margin-top:6px;}
+.review-a .ng{color:var(--vermilion);font-weight:600;}
+.review-a .ok{color:var(--green);font-weight:600;}
+.empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:18px 0;}
+
+.note{font-size:11px;color:var(--ink-soft);line-height:1.6;margin-top:18px;text-align:center;}
+.foot{font-size:10.5px;color:var(--ink-soft);text-align:center;margin-top:22px;opacity:.8;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="brand">
+    <div class="seal serif">観</div>
+    <div>
+      <h1>国内観光資源クイズ</h1>
+      <p>旅行業務取扱管理者 試験対策</p>
+    </div>
+  </div>
+
+  <!-- ===================== HOME ===================== -->
+  <section id="home" class="screen active">
+    <div class="stats">
+      <div class="stat"><div class="num" id="stBest">–</div><div class="lbl">最高スコア</div></div>
+      <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">累計回答</div></div>
+      <div class="stat"><div class="num" id="stRate">–</div><div class="lbl">正答率</div></div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">出題する地方を選ぶ</p>
+      <div class="chips" id="regionChips"></div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">出題設定</p>
+      <div class="row">
+        <div>
+          <div class="k">出題形式</div>
+          <div class="sub">4択と○×のミックス</div>
+        </div>
+        <div class="seg" id="modeSeg">
+          <button data-mode="mix" data-on="1">ミックス</button>
+          <button data-mode="4">4択</button>
+          <button data-mode="OX">○×</button>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <div class="k">問題数</div>
+          <div class="sub" id="countSub">10問</div>
+        </div>
+        <div class="seg" id="countSeg">
+          <button data-c="5">5</button>
+          <button data-c="10" data-on="1">10</button>
+          <button data-c="20">20</button>
+          <button data-c="0">全部</button>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <div class="k">制限時間タイマー</div>
+          <div class="sub" id="timerSub">1問あたり 20秒</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="timerToggle"><span></span></label>
+      </div>
+      <div class="row" id="timerSecsRow" style="display:none;">
+        <div><div class="k">タイマー秒数</div></div>
+        <div class="seg" id="secsSeg">
+          <button data-s="15">15秒</button>
+          <button data-s="20" data-on="1">20秒</button>
+          <button data-s="30">30秒</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="startBtn">クイズを始める</button>
+    <button class="btn btn-ghost" id="reviewBtn">間違えた問題を復習（<span id="wrongCount">0</span>）</button>
+
+    <p class="note">Safariの共有メニューから「ホーム画面に追加」すると、アプリのように使えます。<br>スコアと間違い履歴はこの端末に保存されます。</p>
+    <p class="foot">※ 試験頻出の定番内容を収録した学習用問題集です。最新の試験範囲は公式情報もご確認ください。</p>
+  </section>
+
+  <!-- ===================== QUIZ ===================== -->
+  <section id="quiz" class="screen">
+    <div class="qbar">
+      <span class="count" id="qCount">1 / 10</span>
+      <div class="progress"><i id="qProgress"></i></div>
+    </div>
+    <div class="timer-wrap" id="timerWrap"><i id="timerBar"></i></div>
+
+    <div class="card qcard">
+      <div class="qtags" id="qTags"></div>
+      <p class="qtext" id="qText"></p>
+      <div class="opts" id="qOpts"></div>
+      <div class="exp" id="qExp"></div>
+    </div>
+
+    <button class="btn btn-primary" id="nextBtn" disabled>次へ</button>
+    <button class="btn btn-ghost" id="quitBtn">中断してホームへ</button>
+  </section>
+
+  <!-- ===================== RESULT ===================== -->
+  <section id="result" class="screen">
+    <div class="result-hero">
+      <div class="score-circle" id="scoreCircle">
+        <div class="inner">
+          <div class="pct" id="rPct">0%</div>
+          <div class="of" id="rOf">0 / 0 問正解</div>
+        </div>
+      </div>
+      <div class="result-msg serif" id="rMsg">おつかれさまでした</div>
+      <div class="result-sub" id="rSub"></div>
+    </div>
+
+    <div class="card" id="rReviewCard">
+      <p class="card-title">この回の振り返り</p>
+      <div id="rReview"></div>
+    </div>
+
+    <button class="btn btn-primary" id="againBtn">もう一度（同じ設定）</button>
+    <button class="btn btn-ghost" id="homeBtn">ホームへ戻る</button>
+  </section>
+
+  <!-- ===================== REVIEW ===================== -->
+  <section id="review" class="screen">
+    <div class="card">
+      <p class="card-title">間違えた問題の復習</p>
+      <div id="reviewList"></div>
+    </div>
+    <button class="btn btn-primary" id="reviewQuizBtn">復習問題でクイズ</button>
+    <button class="btn btn-ghost" id="reviewClearBtn">復習リストを空にする</button>
+    <button class="btn btn-ghost" id="reviewHomeBtn">ホームへ戻る</button>
+  </section>
+
+</div>
+
+<script>
+// 国内観光資源 クイズ問題集
+// type: "4" = 4択, "OX" = ○×
+// region keys: hokkaido / tohoku / kanto / chubu / kinki / chugoku_shikoku / kyushu_okinawa
+const REGIONS = {
+  hokkaido:        { label: "北海道",       short: "北海道" },
+  tohoku:          { label: "東北",         short: "東北" },
+  kanto:           { label: "関東",         short: "関東" },
+  chubu:           { label: "中部",         short: "中部" },
+  kinki:           { label: "近畿",         short: "近畿" },
+  chugoku_shikoku: { label: "中国・四国",   short: "中国四国" },
+  kyushu_okinawa:  { label: "九州・沖縄",   short: "九州沖縄" }
+};
+
+const QUESTIONS = [
+  // ───────── 北海道 ─────────
+  { id:"hk01", region:"hokkaido", type:"4",
+    q:"世界自然遺産に登録され、ヒグマやオオワシなど豊かな生態系で知られる北海道東部の半島は?",
+    options:["積丹半島","知床半島","襟裳岬","渡島半島"], answer:1,
+    exp:"知床半島は2005年に世界自然遺産に登録。原生的な自然と海と陸の生態系のつながりが評価されました。" },
+  { id:"hk02", region:"hokkaido", type:"4",
+    q:"「世界三大夜景」のひとつにも数えられる夜景が楽しめる山は?",
+    options:["藻岩山","旭岳","函館山","羊蹄山"], answer:2,
+    exp:"函館山からの夜景は有名。市街地が砂時計のようにくびれた地形に広がります。" },
+  { id:"hk03", region:"hokkaido", type:"OX",
+    q:"特別天然記念物「マリモ」で知られるのは摩周湖である。",
+    options:["○ 正しい","× 誤り"], answer:1,
+    exp:"マリモは阿寒湖。摩周湖は世界有数の透明度で知られる「霧の摩周湖」です。" },
+  { id:"hk04", region:"hokkaido", type:"4",
+    q:"ラベンダー畑の風景で全国的に有名な北海道のエリアは?",
+    options:["富良野・美瑛","ニセコ","網走","稚内"], answer:0,
+    exp:"富良野・美瑛は丘陵地帯のラベンダー畑やパッチワークの丘が観光名所です。" },
+  { id:"hk05", region:"hokkaido", type:"OX",
+    q:"2月に大規模な雪像が並ぶ「雪まつり」が開催される都市は札幌である。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"さっぽろ雪まつりは大通公園などを会場に毎年2月に開催される冬の代表的祭りです。" },
+
+  // ───────── 東北 ─────────
+  { id:"th01", region:"tohoku", type:"4",
+    q:"金色堂で知られ、世界文化遺産に登録された岩手県平泉の寺院は?",
+    options:["瑞巌寺","中尊寺","毛越寺","立石寺"], answer:1,
+    exp:"中尊寺金色堂は奥州藤原氏が築いた仏教文化の象徴。2011年に平泉が世界遺産登録。" },
+  { id:"th02", region:"tohoku", type:"4",
+    q:"勇壮な大型の「ねぶた（ねぷた）」を運行する夏祭りで知られる県は?",
+    options:["秋田県","山形県","青森県","福島県"], answer:2,
+    exp:"青森ねぶた祭は東北三大祭りの一つ。大型の人形灯籠が市内を練り歩きます。" },
+  { id:"th03", region:"tohoku", type:"4",
+    q:"提灯を多数つけた長い竿を額や腰で支える「竿燈まつり」が行われる県は?",
+    options:["秋田県","宮城県","岩手県","青森県"], answer:0,
+    exp:"秋田の竿燈まつりも東北三大祭りの一つ。豊作祈願の行事として知られます。" },
+  { id:"th04", region:"tohoku", type:"OX",
+    q:"日本三景のひとつ「松島」は宮城県にある。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"松島（宮城）は天橋立・宮島とともに日本三景。多島海の景観が有名です。" },
+  { id:"th05", region:"tohoku", type:"4",
+    q:"水深日本一の湖で、たつこ像で知られる秋田県の湖は?",
+    options:["十和田湖","田沢湖","猪苗代湖","八郎潟"], answer:1,
+    exp:"田沢湖は最大水深約423mで日本一深い湖。湖畔のたつこ像が象徴的です。" },
+  { id:"th06", region:"tohoku", type:"OX",
+    q:"青森県・秋田県にまたがり、ブナの原生林が世界自然遺産に登録されているのは白神山地である。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"白神山地は1993年に屋久島とともに日本初の世界自然遺産に登録されました。" },
+  { id:"th07", region:"tohoku", type:"4",
+    q:"大正ロマンの街並みと温泉情緒で知られる山形県の温泉は?",
+    options:["乳頭温泉","銀山温泉","作並温泉","東山温泉"], answer:1,
+    exp:"銀山温泉はガス灯と木造旅館が並ぶレトロな景観で人気の温泉地です。" },
+
+  // ───────── 関東 ─────────
+  { id:"kt01", region:"kanto", type:"4",
+    q:"陽明門などの華麗な建築で世界文化遺産に登録された栃木県の神社は?",
+    options:["鹿島神宮","日光東照宮","氷川神社","香取神宮"], answer:1,
+    exp:"日光東照宮は徳川家康を祀る。「日光の社寺」として世界遺産に登録。" },
+  { id:"kt02", region:"kanto", type:"4",
+    q:"日本三名園のひとつ「偕楽園」がある都市は?",
+    options:["前橋","水戸","宇都宮","高崎"], answer:1,
+    exp:"偕楽園（水戸）は梅の名所。兼六園・後楽園とともに日本三名園です。" },
+  { id:"kt03", region:"kanto", type:"OX",
+    q:"草津温泉は群馬県を代表する温泉で、湯畑が中心にある。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"草津温泉は自然湧出量が日本有数。湯畑と湯もみで有名です。" },
+  { id:"kt04", region:"kanto", type:"4",
+    q:"明治期の近代化を伝え世界文化遺産に登録された群馬県の製糸施設は?",
+    options:["足尾銅山","富岡製糸場","碓氷峠鉄道","新町紡績所"], answer:1,
+    exp:"富岡製糸場は2014年に世界文化遺産に登録された官営模範工場です。" },
+  { id:"kt05", region:"kanto", type:"4",
+    q:"高徳院の本尊として知られる「大仏」がある神奈川県の地は?",
+    options:["小田原","箱根","鎌倉","横須賀"], answer:2,
+    exp:"鎌倉大仏（高徳院）は露坐の阿弥陀如来像として知られます。" },
+
+  // ───────── 中部 ─────────
+  { id:"cb01", region:"chubu", type:"4",
+    q:"日本三名園のひとつで、金沢市にある庭園は?",
+    options:["後楽園","兼六園","栗林公園","縮景園"], answer:1,
+    exp:"兼六園（金沢・石川）はことじ灯籠で有名。日本三名園の一つです。" },
+  { id:"cb02", region:"chubu", type:"4",
+    q:"合掌造り集落で世界文化遺産に登録された岐阜県の地域は?",
+    options:["奥飛騨","白川郷","下呂","郡上八幡"], answer:1,
+    exp:"白川郷（岐阜）・五箇山（富山）の合掌造り集落が世界遺産に登録されています。" },
+  { id:"cb03", region:"chubu", type:"OX",
+    q:"立山黒部アルペンルートは富山県と長野県を結ぶ山岳観光ルートである。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"立山黒部アルペンルートは富山〜長野を結び、黒部ダムや雪の大谷で知られます。" },
+  { id:"cb04", region:"chubu", type:"4",
+    q:"穂高連峰を望む景勝地で、河童橋で知られる長野県の山岳リゾートは?",
+    options:["上高地","軽井沢","志賀高原","美ヶ原"], answer:0,
+    exp:"上高地は梓川や河童橋、大正池などで知られる中部山岳国立公園の景勝地です。" },
+  { id:"cb05", region:"chubu", type:"4",
+    q:"山車（屋台）の曳き廻しで知られ、春と秋に行われる岐阜県の祭りは?",
+    options:["郡上おどり","高山祭","長良川鵜飼","美濃まつり"], answer:1,
+    exp:"高山祭は豪華な屋台で知られ、日本三大美祭の一つとされます。" },
+  { id:"cb06", region:"chubu", type:"OX",
+    q:"「牛に引かれて善光寺参り」で知られる善光寺は長野県にある。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"善光寺は長野市にある無宗派の寺院で、御開帳でも有名です。" },
+
+  // ───────── 近畿 ─────────
+  { id:"kn01", region:"kinki", type:"4",
+    q:"白鷺城とも呼ばれ、世界文化遺産に登録された兵庫県の城は?",
+    options:["大阪城","彦根城","姫路城","二条城"], answer:2,
+    exp:"姫路城は白漆喰の美しさから白鷺城と呼ばれ、日本初の世界文化遺産の一つです。" },
+  { id:"kn02", region:"kinki", type:"4",
+    q:"大仏（盧舎那仏）で知られ、世界遺産にも含まれる奈良の寺院は?",
+    options:["興福寺","薬師寺","東大寺","唐招提寺"], answer:2,
+    exp:"東大寺の大仏（奈良の大仏）は「古都奈良の文化財」として世界遺産に含まれます。" },
+  { id:"kn03", region:"kinki", type:"4",
+    q:"日本三景のひとつで、京都府宮津市にある砂州の景勝地は?",
+    options:["天橋立","白浜","琵琶湖","串本"], answer:0,
+    exp:"天橋立は股のぞきで知られる砂州。松島・宮島とともに日本三景です。" },
+  { id:"kn04", region:"kinki", type:"OX",
+    q:"伊勢神宮は三重県にあり、20年ごとの式年遷宮で知られる。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"伊勢神宮（三重）は内宮・外宮からなり、式年遷宮を行うことで知られます。" },
+  { id:"kn05", region:"kinki", type:"4",
+    q:"弘法大師（空海）が開いた真言密教の聖地で、世界遺産に含まれる和歌山県の山は?",
+    options:["比叡山","吉野山","高野山","大峰山"], answer:2,
+    exp:"高野山は「紀伊山地の霊場と参詣道」として世界遺産に登録されています。" },
+  { id:"kn06", region:"kinki", type:"OX",
+    q:"清水の舞台で知られる清水寺は奈良県にある。",
+    options:["○ 正しい","× 誤り"], answer:1,
+    exp:"清水寺は京都市東山にあります。「清水の舞台から飛び降りる」の語源でも有名です。" },
+
+  // ───────── 中国・四国 ─────────
+  { id:"cs01", region:"chugoku_shikoku", type:"4",
+    q:"海上の大鳥居で知られ、世界文化遺産に登録された広島県宮島の神社は?",
+    options:["出雲大社","厳島神社","吉備津神社","金刀比羅宮"], answer:1,
+    exp:"厳島神社（宮島）は日本三景の一つでもあり、海上の朱塗りの大鳥居が象徴です。" },
+  { id:"cs02", region:"chugoku_shikoku", type:"4",
+    q:"日本最大級の砂丘で、観光地として知られる鳥取県の名所は?",
+    options:["中田島砂丘","鳥取砂丘","吹上浜","遠州灘"], answer:1,
+    exp:"鳥取砂丘は風紋やラクダ体験などで知られる日本有数の海岸砂丘です。" },
+  { id:"cs03", region:"chugoku_shikoku", type:"4",
+    q:"日本三名園のひとつで、岡山市にある庭園は?",
+    options:["後楽園","栗林公園","縮景園","衆楽園"], answer:0,
+    exp:"後楽園（岡山）は兼六園・偕楽園とともに日本三名園に数えられます。" },
+  { id:"cs04", region:"chugoku_shikoku", type:"4",
+    q:"「坊っちゃん」ゆかりで日本最古級とされる愛媛県の温泉は?",
+    options:["道後温泉","三朝温泉","湯郷温泉","祖谷温泉"], answer:0,
+    exp:"道後温泉（松山）は日本三古湯の一つとされ、道後温泉本館が有名です。" },
+  { id:"cs05", region:"chugoku_shikoku", type:"OX",
+    q:"鳴門の渦潮は徳島県と兵庫県（淡路島）の間の海峡で見られる。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"鳴門海峡（徳島〜淡路島）の大きな渦潮は世界有数の規模で知られます。" },
+  { id:"cs06", region:"chugoku_shikoku", type:"4",
+    q:"「縁結びの神」として知られ、神在月の神話で有名な島根県の神社は?",
+    options:["大山祇神社","出雲大社","大神山神社","物部神社"], answer:1,
+    exp:"出雲大社は縁結びで知られ、旧暦10月は出雲では「神在月」と呼ばれます。" },
+  { id:"cs07", region:"chugoku_shikoku", type:"OX",
+    q:"「最後の清流」と呼ばれる四万十川は高知県を流れる。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"四万十川（高知）は沈下橋で知られ、清流として全国的に有名です。" },
+
+  // ───────── 九州・沖縄 ─────────
+  { id:"ko01", region:"kyushu_okinawa", type:"4",
+    q:"世界最大級のカルデラを持つ活火山として知られる熊本県の山は?",
+    options:["桜島","阿蘇山","雲仙岳","霧島山"], answer:1,
+    exp:"阿蘇山は巨大なカルデラと中岳の火口で知られる熊本のシンボルです。" },
+  { id:"ko02", region:"kyushu_okinawa", type:"4",
+    q:"源泉数・湧出量ともに日本有数で「温泉県」の代表とされる県は?",
+    options:["佐賀県","長崎県","大分県","宮崎県"], answer:2,
+    exp:"大分県は別府・由布院など名湯が多く、源泉数・湧出量とも日本トップクラスです。" },
+  { id:"ko03", region:"kyushu_okinawa", type:"OX",
+    q:"屋久島は鹿児島県にあり、縄文杉などの原生林で世界自然遺産に登録されている。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"屋久島（鹿児島）は1993年に世界自然遺産に登録。樹齢数千年の屋久杉で有名です。" },
+  { id:"ko04", region:"kyushu_okinawa", type:"4",
+    q:"鹿児島市の対岸にあり、噴煙を上げる活火山として知られるのは?",
+    options:["開聞岳","桜島","韓国岳","硫黄島"], answer:1,
+    exp:"桜島は鹿児島湾に浮かぶ活火山で、市街地から間近に望めます。" },
+  { id:"ko05", region:"kyushu_okinawa", type:"4",
+    q:"学問の神・菅原道真を祀り、受験生に人気の福岡県の神社は?",
+    options:["宗像大社","太宰府天満宮","香椎宮","筥崎宮"], answer:1,
+    exp:"太宰府天満宮は菅原道真を祀り、合格祈願で全国から参拝者が訪れます。" },
+  { id:"ko06", region:"kyushu_okinawa", type:"OX",
+    q:"首里城は琉球王国の王宮跡で、沖縄県那覇市にある。",
+    options:["○ 正しい","× 誤り"], answer:0,
+    exp:"首里城は琉球王国の中心。城跡は「琉球王国のグスク及び関連遺産群」として世界遺産です。" },
+  { id:"ko07", region:"kyushu_okinawa", type:"4",
+    q:"砂に体を埋める「砂むし温泉」で知られる鹿児島県の温泉地は?",
+    options:["黒川温泉","指宿温泉","嬉野温泉","雲仙温泉"], answer:1,
+    exp:"指宿温泉（鹿児島）は天然の砂むし温泉で全国的に知られています。" },
+  { id:"ko08", region:"kyushu_okinawa", type:"4",
+    q:"神話の里として知られ、渓谷の柱状節理とボートで有名な宮崎県の景勝地は?",
+    options:["関門海峡","高千穂峡","別府地獄","西海橋"], answer:1,
+    exp:"高千穂峡（宮崎）は阿蘇の溶岩がつくった柱状節理の渓谷で、真名井の滝が有名です。" },
+
+  // ───────── 横断テーマ ─────────
+  { id:"jp01", region:"kinki", type:"4",
+    q:"日本三景の正しい組み合わせは?",
+    options:["松島・天橋立・宮島","松島・那智・桜島","天橋立・尾瀬・宮島","松島・上高地・宮島"], answer:0,
+    exp:"日本三景は松島（宮城）・天橋立（京都）・宮島＝厳島（広島）です。" },
+  { id:"jp02", region:"kanto", type:"4",
+    q:"日本三名園の正しい組み合わせは?",
+    options:["兼六園・偕楽園・後楽園","兼六園・栗林公園・縮景園","後楽園・偕楽園・栗林公園","兼六園・後楽園・衆楽園"], answer:0,
+    exp:"日本三名園は兼六園（金沢）・偕楽園（水戸）・後楽園（岡山）です。" }
+];
+
+</script>
+<script>
+/* ============ storage helpers (persist across sessions) ============ */
+const DEFAULT_STATS = {totalAnswered:0, totalCorrect:0, bestPct:null};
+const DEFAULT_SETTINGS = {regions:["__all__"], mode:"mix", count:10, timerOn:false, timerSecs:20};
+let stats = {...DEFAULT_STATS};
+let settings = {...DEFAULT_SETTINGS};
+let wrongIds = [];
+
+async function sget(key, fb){
+  try{ const r = await window.storage.get(key); return r ? JSON.parse(r.value) : fb; }
+  catch(e){ return fb; }
+}
+async function sset(key, val){
+  try{ await window.storage.set(key, JSON.stringify(val)); }catch(e){}
+}
+async function loadAll(){
+  stats    = {...DEFAULT_STATS,    ...(await sget("tts:stats", {}))};
+  settings = {...DEFAULT_SETTINGS, ...(await sget("tts:settings", {}))};
+  wrongIds = await sget("tts:wrong", []);
+  if(!Array.isArray(wrongIds)) wrongIds = [];
+}
+
+/* ============ state ============ */
+let session = null; // {pool, idx, correct, answered:[], reviewMode}
+
+/* ============ DOM ============ */
+const $ = s => document.querySelector(s);
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $("#"+id).classList.add("active");
+  window.scrollTo({top:0,behavior:"instant"});
+}
+
+/* ============ HOME render ============ */
+function renderHome(){
+  $("#stBest").textContent  = stats.bestPct==null ? "–" : stats.bestPct+"%";
+  $("#stTotal").textContent = stats.totalAnswered;
+  $("#stRate").textContent  = stats.totalAnswered ? Math.round(stats.totalCorrect/stats.totalAnswered*100)+"%" : "–";
+  $("#wrongCount").textContent = wrongIds.length;
+  $("#reviewBtn").disabled = wrongIds.length===0;
+
+  // region chips
+  const wrap = $("#regionChips"); wrap.innerHTML="";
+  const all = document.createElement("div");
+  all.className="chip all"; all.textContent="すべて"; all.dataset.r="__all__";
+  all.dataset.on = settings.regions.includes("__all__") ? "1":"0";
+  wrap.appendChild(all);
+  Object.entries(REGIONS).forEach(([k,v])=>{
+    const c=document.createElement("div");
+    c.className="chip"; c.textContent=v.label; c.dataset.r=k;
+    c.dataset.on = (!settings.regions.includes("__all__") && settings.regions.includes(k))?"1":"0";
+    wrap.appendChild(c);
+  });
+
+  // mode seg
+  document.querySelectorAll("#modeSeg button").forEach(b=> b.dataset.on = b.dataset.mode===settings.mode?"1":"0");
+  // count seg
+  document.querySelectorAll("#countSeg button").forEach(b=> b.dataset.on = (+b.dataset.c)===settings.count?"1":"0");
+  $("#countSub").textContent = settings.count===0 ? "全問" : settings.count+"問";
+  // timer
+  $("#timerToggle").checked = settings.timerOn;
+  $("#timerSecsRow").style.display = settings.timerOn ? "flex":"none";
+  document.querySelectorAll("#secsSeg button").forEach(b=> b.dataset.on=(+b.dataset.s)===settings.timerSecs?"1":"0");
+  $("#timerSub").textContent = settings.timerOn ? `1問あたり ${settings.timerSecs}秒` : "オフ";
+}
+
+/* ============ HOME events ============ */
+$("#regionChips").addEventListener("click", e=>{
+  const chip = e.target.closest(".chip"); if(!chip) return;
+  const r = chip.dataset.r;
+  if(r==="__all__"){ settings.regions=["__all__"]; }
+  else{
+    let cur = settings.regions.includes("__all__") ? [] : [...settings.regions];
+    if(cur.includes(r)) cur = cur.filter(x=>x!==r); else cur.push(r);
+    settings.regions = cur.length ? cur : ["__all__"];
+  }
+  sset("tts:settings", settings); renderHome();
+});
+$("#modeSeg").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  settings.mode=b.dataset.mode; sset("tts:settings",settings); renderHome();
+});
+$("#countSeg").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  settings.count=+b.dataset.c; sset("tts:settings",settings); renderHome();
+});
+$("#timerToggle").addEventListener("change", e=>{
+  settings.timerOn=e.target.checked; sset("tts:settings",settings); renderHome();
+});
+$("#secsSeg").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  settings.timerSecs=+b.dataset.s; sset("tts:settings",settings); renderHome();
+});
+
+/* ============ build pool ============ */
+function buildPool(forceIds){
+  let pool;
+  if(forceIds){
+    pool = QUESTIONS.filter(q=>forceIds.includes(q.id));
+  }else{
+    pool = QUESTIONS.filter(q=>{
+      const okR = settings.regions.includes("__all__") || settings.regions.includes(q.region);
+      const okM = settings.mode==="mix" || q.type===settings.mode;
+      return okR && okM;
+    });
+  }
+  // shuffle
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  if(!forceIds && settings.count>0) pool = pool.slice(0, settings.count);
+  return pool;
+}
+
+/* ============ QUIZ ============ */
+let timer=null, timeLeft=0;
+function startQuiz(forceIds){
+  const pool = buildPool(forceIds);
+  if(pool.length===0){ alert("該当する問題がありません。地方や形式の設定を見直してください。"); return; }
+  session = {pool, idx:0, correct:0, answered:[], reviewMode: !!forceIds};
+  $("#timerWrap").classList.toggle("show", settings.timerOn && !forceIds);
+  show("quiz"); renderQuestion();
+}
+function renderQuestion(){
+  clearTimer();
+  const q = session.pool[session.idx];
+  const n = session.pool.length;
+  $("#qCount").textContent = `${session.idx+1} / ${n}`;
+  $("#qProgress").style.width = (session.idx/n*100)+"%";
+
+  const tags = $("#qTags"); tags.innerHTML="";
+  const tg = document.createElement("span"); tg.className="tag region"; tg.textContent=REGIONS[q.region].label; tags.appendChild(tg);
+  const tt = document.createElement("span");
+  tt.className = "tag " + (q.type==="OX"?"tOX":"t4");
+  tt.textContent = q.type==="OX" ? "○×問題" : "4択問題"; tags.appendChild(tt);
+
+  $("#qText").textContent = q.q;
+
+  const opts=$("#qOpts"); opts.innerHTML="";
+  const marks = q.type==="OX" ? ["○","×"] : ["ア","イ","ウ","エ"];
+  q.options.forEach((o,i)=>{
+    const b=document.createElement("button");
+    b.className="opt"; b.dataset.i=i;
+    b.innerHTML = `<span class="mk">${marks[i]||i+1}</span><span>${o}</span>`;
+    b.addEventListener("click",()=>choose(i));
+    opts.appendChild(b);
+  });
+  $("#qExp").classList.remove("show");
+  $("#nextBtn").disabled = true;
+  $("#nextBtn").textContent = (session.idx===n-1)?"結果を見る":"次へ";
+
+  if(settings.timerOn && !session.reviewMode) startTimer();
+}
+function startTimer(){
+  timeLeft = settings.timerSecs;
+  const bar=$("#timerBar"); bar.classList.remove("warn"); bar.style.width="100%";
+  const total=settings.timerSecs;
+  timer=setInterval(()=>{
+    timeLeft-=0.1;
+    const pct=Math.max(0,timeLeft/total*100);
+    bar.style.width=pct+"%";
+    if(pct<33) bar.classList.add("warn");
+    if(timeLeft<=0){ clearTimer(); choose(-1); }
+  },100);
+}
+function clearTimer(){ if(timer){clearInterval(timer);timer=null;} }
+
+function choose(i){
+  clearTimer();
+  const q=session.pool[session.idx];
+  const btns=[...document.querySelectorAll(".opt")];
+  if(btns[0]?.disabled) return; // already answered
+  btns.forEach(b=>b.disabled=true);
+  const correct = i===q.answer;
+  btns.forEach(b=>{
+    const bi=+b.dataset.i;
+    if(bi===q.answer) b.classList.add("correct");
+    else if(bi===i) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  if(correct) session.correct++;
+  session.answered.push({id:q.id, q:q.q, type:q.type, region:q.region,
+    correct, your:i, ans:q.answer, options:q.options, exp:q.exp});
+
+  // wrong list maintenance (skip for pure review re-answers? keep updating)
+  if(correct){ wrongIds = wrongIds.filter(x=>x!==q.id); }
+  else if(!wrongIds.includes(q.id)){ wrongIds.push(q.id); }
+  sset("tts:wrong", wrongIds);
+
+  // explanation
+  const exp=$("#qExp");
+  const res = i===-1 ? `<span class="res ng">時間切れ</span>` : (correct?`<span class="res ok">正解</span>`:`<span class="res ng">不正解</span>`);
+  exp.innerHTML = `<div class="head">解説 ${res}</div>${q.exp}`;
+  exp.classList.add("show");
+  $("#nextBtn").disabled=false;
+}
+
+$("#nextBtn").addEventListener("click",()=>{
+  if(session.idx < session.pool.length-1){ session.idx++; renderQuestion(); }
+  else finishQuiz();
+});
+$("#quitBtn").addEventListener("click",()=>{ clearTimer(); session=null; renderHome(); show("home"); });
+
+/* ============ finish ============ */
+function finishQuiz(){
+  clearTimer();
+  const n=session.pool.length, c=session.correct, pct=Math.round(c/n*100);
+  // record stats only for normal quizzes (still fine for review)
+  stats.totalAnswered += n;
+  stats.totalCorrect  += c;
+  if(stats.bestPct==null || pct>stats.bestPct) stats.bestPct=pct;
+  sset("tts:stats", stats);
+
+  $("#rPct").textContent = pct+"%";
+  $("#rOf").textContent  = `${c} / ${n} 問正解`;
+  $("#scoreCircle").style.setProperty("--deg", (pct*3.6)+"deg");
+  let msg,sub;
+  if(pct===100){msg="満点！お見事です";sub="この調子で他の地方も挑戦しましょう。";}
+  else if(pct>=80){msg="合格ライン突破";sub="あと少しで満点。間違いを復習しておきましょう。";}
+  else if(pct>=60){msg="もう一歩";sub="苦手分野を復習リストで重点的に。";}
+  else{msg="復習しよう";sub="解説をしっかり読んで、もう一度挑戦を。";}
+  $("#rMsg").textContent=msg; $("#rSub").textContent=sub;
+
+  const wrap=$("#rReview"); wrap.innerHTML="";
+  const wrongs=session.answered.filter(a=>!a.correct);
+  if(wrongs.length===0){ wrap.innerHTML=`<div class="empty">全問正解！間違いはありません 🎉</div>`; }
+  else wrongs.forEach(a=>{
+    const div=document.createElement("div"); div.className="review-item";
+    const your = a.your===-1 ? "（時間切れ）" : a.options[a.your];
+    div.innerHTML=`<div class="review-q">${a.q}</div>
+      <div class="review-a"><span class="ng">あなた: ${your}</span> ／ <span class="ok">正解: ${a.options[a.ans]}</span></div>
+      <div class="review-a" style="color:var(--ink-soft);margin-top:4px;">${a.exp}</div>`;
+    wrap.appendChild(div);
+  });
+  show("result");
+}
+$("#againBtn").addEventListener("click",()=>startQuiz(session && session.reviewMode ? wrongIds.slice():null));
+$("#homeBtn").addEventListener("click",()=>{ session=null; renderHome(); show("home"); });
+
+/* ============ REVIEW screen ============ */
+function renderReview(){
+  const list=$("#reviewList"); list.innerHTML="";
+  const items=QUESTIONS.filter(q=>wrongIds.includes(q.id));
+  if(items.length===0){ list.innerHTML=`<div class="empty">間違えた問題はありません。</div>`; }
+  else items.forEach(q=>{
+    const div=document.createElement("div"); div.className="review-item";
+    div.innerHTML=`<div class="review-q">${q.q}</div>
+      <div class="review-a"><span class="ok">正解: ${q.options[q.answer]}</span></div>
+      <div class="review-a" style="color:var(--ink-soft);margin-top:4px;">${q.exp}</div>`;
+    list.appendChild(div);
+  });
+  $("#reviewQuizBtn").disabled = items.length===0;
+}
+$("#reviewBtn").addEventListener("click",()=>{ renderReview(); show("review"); });
+$("#reviewHomeBtn").addEventListener("click",()=>{ renderHome(); show("home"); });
+$("#reviewQuizBtn").addEventListener("click",()=>{ if(wrongIds.length) startQuiz(wrongIds.slice()); });
+$("#reviewClearBtn").addEventListener("click",()=>{
+  if(confirm("復習リストを空にしますか？")){ wrongIds=[]; sset("tts:wrong",wrongIds); renderReview(); renderHome(); }
+});
+
+/* ============ start ============ */
+$("#startBtn").addEventListener("click",()=>startQuiz(null));
+
+(async function init(){
+  await loadAll();
+  renderHome();
+})();
+</script>
+</body>
+</html>
